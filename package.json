@@ -1,0 +1,61 @@
+{
+  "name": "agenda-digital-escolar",
+  "version": "1.0.0",
+  "description": "Ecosistema de comunicación bidireccional entre establecimiento educativo y apoderados - MySQL + Sequelize",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "setup": "node setup.js",
+    "init-data": "node setup.js",
+    "test": "node tests/run-all.js",
+    "test:all": "node tests/run-all.js",
+    "test:db": "node tests/run-all.js database",
+    "test:unit": "node tests/run-all.js unit",
+    "test:integration": "node tests/run-all.js integration",
+    "test:e2e": "node tests/run-all.js e2e",
+    "test:connection": "node tests/database/connection.test.js",
+    "test:models": "node tests/database/models.test.js",
+    "test:foreign-key": "node tests/database/foreign-key-integrity.test.js",
+    "test:active-filter": "node test-active-announcements.js",
+    "test:api": "node tests/integration/api.test.js",
+    "docs": "echo 'Documentación disponible en http://localhost:3000/api/health'"
+  },
+  "keywords": [
+    "agenda-digital",
+    "educacion",
+    "mysql",
+    "sequelize",
+    "nodejs",
+    "express",
+    "orm",
+    "comunicacion-escolar",
+    "trazabilidad",
+    "reportes-escolares"
+  ],
+  "author": "Desarrollador AIEP - Analista Programador",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "agenda-digital-escolar"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mysql2": "^3.22.3",
+    "sequelize": "^6.37.8",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "sequelize-cli": "^6.6.5"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}
