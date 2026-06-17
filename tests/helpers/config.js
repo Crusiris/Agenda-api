@@ -10,7 +10,7 @@ process.env.NODE_ENV = 'test';
 
 // Base URLs para tests
 const CONFIG = {
-  BASE_URL: process.env.TEST_BASE_URL || 'http://localhost:3000',
+  BASE_URL: process.env.TEST_BASE_URL || 'http://localhost:8080',
   DB_NAME: process.env.TEST_DB_NAME || 'agenda_escolar_test',
   TIMEOUT: 10000,
   
@@ -74,26 +74,21 @@ const cleanTestDB = async () => {
 const TEST_DATA = {
   DOCENTE: {
     rut: '12345678-9',
-    nombre: 'Test Docente',
+    nombres: 'Test',
+    apellidos: 'Docente García',
     email: 'test.docente@test.com',
     password: 'test123456',
-    asignatura: 'Test Subject',
-    cursos: ['TEST1A'],
-    es_profesor_jefe: true
+    especialidad: 'Matemáticas'
   },
   
   APODERADO: {
     rut: '87654321-K',
-    nombre: 'Test Apoderado',
+    nombres: 'Test',
+    apellidos: 'Apoderado Silva',
     email: 'test.apoderado@test.com',
     password: 'test123456',
-    telefono: '+56987654321',
-    hijos: [{
-      nombre: 'Test Estudiante',
-      rut: '11111111-1',
-      curso: 'TEST1A',
-      edad: 8
-    }]
+    parentesco: 'Padre',
+    telefono: '+56987654321'
   },
   
   CONTACTO: {

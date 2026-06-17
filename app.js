@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 require('dotenv').config();
 
 // Importar configuración de base de datos y modelos
@@ -74,6 +76,24 @@ app.use('/api/docentes', docentesRoutes);
 app.use('/api/apoderados', apoderadosRoutes);
 app.use('/api/contactos', contactosRoutes);
 app.use('/api/reportes', reportesRoutes);
+
+// Documentación Swagger — disponible en /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'Agenda Digital Escolar - API Docs',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'list',
+    filter: true
+  }
+}));
+
+// Exponer la spec OpenAPI en JSON (útil para generadores de cliente)
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // Ruta de salud para verificar estado de la API y BD
 app.get('/api/health', async (req, res) => {
   try {

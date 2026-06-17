@@ -16,7 +16,7 @@ class ApoderadoModelTests {
   async setup() {
     try {
       await connect();
-      await syncModels(true);
+      await syncModels(false);
       this.models = initializeModels();
       logger.success('Setup completado para tests de Apoderado');
     } catch (error) {
@@ -39,7 +39,7 @@ class ApoderadoModelTests {
       const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
       
       ValidationTestHelper.assertTrue(apoderado.id > 0, 'Apoderado debe tener ID');
-      ValidationTestHelper.assertEquals(apoderado.nombre, TEST_DATA.APODERADO.nombre);
+      ValidationTestHelper.assertEquals(apoderado.nombres, TEST_DATA.APODERADO.nombres);
       ValidationTestHelper.assertEquals(apoderado.email, TEST_DATA.APODERADO.email.toLowerCase());
       ValidationTestHelper.assertTrue(apoderado.activo, 'Apoderado debe estar activo por defecto');
       
@@ -61,114 +61,63 @@ class ApoderadoModelTests {
       }
     });
 
-    this.runner.describe('Configuración de notificaciones por defecto', async () => {
+    this.runner.describe('Notificaciones habilitadas por defecto', async () => {
       const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
       
       ValidationTestHelper.assertTrue(
-        apoderado.configuracionNotificaciones,
-        'Debe tener configuración de notificaciones'
-      );
-      
-      ValidationTestHelper.assertTrue(
-        apoderado.configuracionNotificaciones.emailHabilitado,
-        'Email debe estar habilitado por defecto'
+        apoderado.configuracionesNotificaciones === true,
+        'Notificaciones deben estar habilitadas por defecto'
       );
       
       await apoderado.destroy();
     });
 
-    this.runner.describe('Gestión de hijos', async () => {
+    this.runner.describe('puedeRecibirNotificacion cuando activo=true', async () => {
       const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
       
-      // Verificar hijo inicial
       ValidationTestHelper.assertTrue(
-        Array.isArray(apoderado.hijos),
-        'Hijos debe ser un array'
-      );
-      ValidationTestHelper.assertTrue(
-        apoderado.hijos.length > 0,
-        'Debe tener al menos un hijo'
-      );
-      
-      // Agregar hijo
-      const nuevoHijo = {
-        nombre: 'Nuevo Hijo',
-        rut: '22222222-2',
-        curso: 'TEST2A',
-        edad: 9
-      };
-      
-      await apoderado.agregarHijo(nuevoHijo);
-      await apoderado.reload();
-      
-      ValidationTestHelper.assertEquals(
-        apoderado.hijos.length, 
-        TEST_DATA.APODERADO.hijos.length + 1,
-        'Debe tener un hijo más'
-      );
-      
-      // Remover hijo
-      await apoderado.removerHijo('22222222-2');
-      await apoderado.reload();
-      
-      ValidationTestHelper.assertEquals(
-        apoderado.hijos.length,
-        TEST_DATA.APODERADO.hijos.length,
-        'Debe volver al número original de hijos'
+        apoderado.puedeRecibirNotificacion(),
+        'Apoderado activo debe poder recibir notificaciones'
       );
       
       await apoderado.destroy();
     });
 
-    this.runner.describe('Actualización de configuración de notificaciones', async () => {
-      const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
-      
-      const nuevaConfig = {
-        emailHabilitado: false,
-        smsHabilitado: true
-      };
-      
-      await apoderado.actualizarConfiguracionNotificaciones(nuevaConfig);
-      await apoderado.reload();
-      
-      ValidationTestHelper.assertEquals(
-        apoderado.configuracionNotificaciones.emailHabilitado,
-        false,
-        'Email debe estar deshabilitado'
-      );
-      
-      ValidationTestHelper.assertEquals(
-        apoderado.configuracionNotificaciones.smsHabilitado,
-        true,
-        'SMS debe estar habilitado'
-      );
-      
-      await apoderado.destroy();
-    });
-
-    this.runner.describe('Verificación de horarios de notificación', async () => {
+    this.runner.describe('puedeRecibirNotificacion cuando activo=false', async () => {
       const apoderado = await this.models.Apoderado.create({
         ...TEST_DATA.APODERADO,
-        configuracionNotificaciones: {
-          ...TEST_DATA.APODERADO.configuracionNotificaciones,
-          horarioNotificaciones: {
-            inicio: '08:00',
-            fin: '20:00'
-          }
-        }
+        email: 'test.inactivo@test.com',
+        activo: false
       });
       
-      // Simplemente verificar que el método existe y funciona
-      const puedeRecibir = apoderado.puedeRecibirNotificacion('reporteSalud');
       ValidationTestHelper.assertTrue(
-        typeof puedeRecibir === 'boolean',
-        'Debe retornar un valor booleano'
+        !apoderado.puedeRecibirNotificacion(),
+        'Apoderado inactivo no debe poder recibir notificaciones'
       );
       
       await apoderado.destroy();
     });
 
-    this.runner.describe('Perfil público', async () => {
+    this.runner.describe('registrarAcceso actualiza fechaUltimoAcceso', async () => {
+      const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
+      
+      ValidationTestHelper.assertTrue(
+        !apoderado.fechaUltimoAcceso,
+        'Fecha último acceso debe ser null inicialmente'
+      );
+      
+      await apoderado.registrarAcceso();
+      await apoderado.reload();
+      
+      ValidationTestHelper.assertTrue(
+        apoderado.fechaUltimoAcceso instanceof Date,
+        'Fecha último acceso debe ser válida después del registro'
+      );
+      
+      await apoderado.destroy();
+    });
+
+    this.runner.describe('Perfil público no incluye contraseña', async () => {
       const apoderado = await this.models.Apoderado.create(TEST_DATA.APODERADO);
       
       const perfil = apoderado.obtenerPerfilPublico();
@@ -177,13 +126,21 @@ class ApoderadoModelTests {
         !('password' in perfil),
         'Perfil público no debe incluir contraseña'
       );
-      
       ValidationTestHelper.assertTrue(
-        'nombre' in perfil && 'email' in perfil,
-        'Perfil debe incluir información básica'
+        'nombres' in perfil && 'email' in perfil,
+        'Perfil debe incluir nombres y email'
       );
       
       await apoderado.destroy();
+    });
+
+    this.runner.describe('validarCredenciales rechaza datos inválidos', async () => {
+      const errores = this.models.Apoderado.validarCredenciales('no-es-email', '123');
+      
+      ValidationTestHelper.assertTrue(
+        errores.length > 0,
+        'Debe retornar errores para credenciales inválidas'
+      );
     });
   }
 

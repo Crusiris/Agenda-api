@@ -9,7 +9,7 @@
  */
 
 const { connect, disconnect } = require('../../../database/connection');
-const { initializeModels } = require('../../../database/inicializarDatos');
+const { initializeModels } = require('../../../models');
 const ValidationTestHelper = require('../../helpers/utils').ValidationTestHelper;
 const TestRunner = require('../../helpers/utils').TestRunner;
 const { TEST_DATA } = require('../../helpers/config');

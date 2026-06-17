@@ -4,11 +4,11 @@
 # Usando cURL para demostrar la integración HTTP/HTTPS
 
 echo "🏫 AGENDA DIGITAL ESCOLAR - Pruebas de Integración"
-echo "📡 Stack MERN - Comunicación Bidireccional HTTP/HTTPS"
+echo "📡 Stack Node.js + Express + MySQL - Comunicación Bidireccional HTTP/HTTPS"
 echo "🔄 Validando Flujos de Operación Completos"
 echo ""
 
-API_BASE="http://localhost:3000"
+API_BASE="http://localhost:8080"
 
 # Función para mostrar resultados
 mostrar_resultado() {
@@ -50,7 +50,7 @@ mostrar_resultado "Obtener Cursos Asignados" "Sistema valida permisos - solo cur
 curl -s -H "x-docente-id: 1" "$API_BASE/api/docentes/1/cursos" | jq '.'
 
 # 1.3 Crear reporte de asistencia
-mostrar_resultado "Crear Reporte de Asistencia" "Validación de integridad en cliente y servidor - Persistencia en MongoDB"
+mostrar_resultado "Crear Reporte de Asistencia" "Validación de integridad en cliente y servidor - Persistencia en MySQL"
 
 curl -s -X POST "$API_BASE/api/reportes/asistencia" \
   -H "Content-Type: application/json" \
@@ -125,21 +125,21 @@ echo ""
 echo "🎯 === VERIFICACIÓN DE ARQUITECTURA Y COMPONENTES ==="
 
 # Documentación
-mostrar_resultado "Documentación del Sistema" "Arquitectura MERN - Componentes desacoplados funcionando correctamente"
+mostrar_resultado "Documentación del Sistema (Swagger)" "Arquitectura Node.js + Express.js + MySQL - Componentes desacoplados funcionando correctamente"
 
-curl -s "$API_BASE/api/docs" | jq '.titulo, .descripcion, .stack'
+curl -s "$API_BASE/api-docs.json" | jq '.info.title, .info.version'
 
 # Estado del sistema
 mostrar_resultado "Estado del Sistema" "Capa de Servicio (Node.js + Express) operativa"
 
-curl -s "$API_BASE/health" | jq '.'
+curl -s "$API_BASE/api/health" | jq '.'
 
 echo ""
 echo "📊 === RESUMEN DE INTEGRACIÓN ==="
 echo "═══════════════════════════════════════════════════════════════════════"
 echo "✅ Capa de Presentación: React.js (Simulada con cURL requests)"
 echo "✅ Capa de Servicio: Node.js + Express.js (API REST funcionando)"
-echo "✅ Capa de Datos: MongoDB Atlas (Simulada con estructuras JSON)"
+echo "✅ Capa de Datos: MySQL + Sequelize ORM"
 echo "✅ Protocolo de Comunicación: HTTP/HTTPS con intercambio bidireccional"
 echo "✅ Flujo de Gestión del Docente: Autenticación → Validación → Emisión"
 echo "✅ Flujo de Notificación: Recepción Reactiva → Confirmación → Trazabilidad"
@@ -153,6 +153,6 @@ echo "funcionando correctamente con flujos bidireccionales verificados."
 echo ""
 echo "💡 Próximos pasos para producción:"
 echo "   - Implementar autenticación JWT real"
-echo "   - Conectar a MongoDB Atlas real"
+echo "   - Configurar variables de entorno en producción"
 echo "   - Desarrollar interfaz React.js"
 echo "   - Implementar WebSockets para actualizaciones en tiempo real"

@@ -16,7 +16,7 @@ class DocenteModelTests {
   async setup() {
     try {
       await connect();
-      await syncModels(true); // Limpiar y recrear tablas
+      await syncModels(false);
       this.models = initializeModels();
       logger.success('Setup completado para tests de Docente');
     } catch (error) {
@@ -39,7 +39,7 @@ class DocenteModelTests {
       const docente = await this.models.Docente.create(TEST_DATA.DOCENTE);
       
       ValidationTestHelper.assertTrue(docente.id > 0, 'Docente debe tener ID');
-      ValidationTestHelper.assertEquals(docente.nombre, TEST_DATA.DOCENTE.nombre);
+      ValidationTestHelper.assertEquals(docente.nombres, TEST_DATA.DOCENTE.nombres);
       ValidationTestHelper.assertEquals(docente.email, TEST_DATA.DOCENTE.email.toLowerCase());
       ValidationTestHelper.assertTrue(docente.activo, 'Docente debe estar activo por defecto');
       
@@ -95,27 +95,28 @@ class DocenteModelTests {
     });
 
     this.runner.describe('Métodos del modelo', async () => {
-      const docente = await this.models.Docente.create({
-        ...TEST_DATA.DOCENTE,
-        esProfesorJefe: true
-      });
+      const docente = await this.models.Docente.create(TEST_DATA.DOCENTE);
       
-      // Test definirPermisos
+      // Test definirPermisos - permisos base
       const permisos = docente.definirPermisos();
       ValidationTestHelper.assertTrue(
-        permisos.includes('gestionar_curso'),
-        'Profesor jefe debe tener permiso de gestionar curso'
+        permisos.includes('crear_reportes'),
+        'Docente debe tener permiso crear_reportes'
       );
-      
-      // Test puedeCrearReporteEnCurso
-      const puedeCrear = docente.puedeCrearReporteEnCurso('TEST1A');
-      ValidationTestHelper.assertTrue(puedeCrear, 'Docente debe poder crear reporte en su curso');
+      ValidationTestHelper.assertTrue(
+        permisos.includes('ver_asistencia'),
+        'Docente debe tener permiso ver_asistencia'
+      );
       
       // Test obtenerPerfilPublico
       const perfil = docente.obtenerPerfilPublico();
       ValidationTestHelper.assertTrue(
         !('password' in perfil),
         'Perfil público no debe incluir contraseña'
+      );
+      ValidationTestHelper.assertTrue(
+        'nombres' in perfil && 'apellidos' in perfil,
+        'Perfil debe incluir nombres y apellidos'
       );
       
       await docente.destroy();
@@ -146,7 +147,7 @@ class DocenteModelTests {
       try {
         await this.models.Docente.create({
           ...TEST_DATA.DOCENTE,
-          nombre: 'Otro Docente'
+          nombres: 'Otro Docente'
         });
         throw new Error('Debería haber fallado por RUT duplicado');
       } catch (error) {

@@ -6,7 +6,7 @@
  * Integración HTTP/HTTPS con protocolo bidireccional
  */
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'http://localhost:8080';
 
 // Función para hacer peticiones HTTP (simula librería Axios)
 async function realizarPeticionHTTP(url, options = {}) {
@@ -47,7 +47,7 @@ function mostrarResultadoPrueba(titulo, resultado, flujo = '') {
 // Función principal de pruebas del ecosistema escolar
 async function ejecutarPruebasEcosistemaEscolar() {
   console.log('🏫 AGENDA DIGITAL ESCOLAR - Pruebas de Integración');
-  console.log('📡 Stack MERN - Comunicación Bidireccional HTTP/HTTPS');
+  console.log('📡 Stack Node.js + Express + MySQL - Comunicación Bidireccional HTTP/HTTPS');
   console.log('🔄 Validando Flujos de Operación Completos\n');
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -117,7 +117,7 @@ async function ejecutarPruebasEcosistemaEscolar() {
     mostrarResultadoPrueba(
       'Crear Reporte de Asistencia',
       reporteAsistencia,
-      'Validación de integridad en cliente y servidor - Persistencia en MongoDB'
+      'Validación de integridad en cliente y servidor - Persistencia en MySQL'
     );
   }
 
@@ -260,22 +260,22 @@ async function ejecutarPruebasEcosistemaEscolar() {
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VERIFICACIÓN DE ARQUITECTURA MERN
+  // VERIFICACIÓN DE ARQUITECTURA Y COMPONENTES
   // ═══════════════════════════════════════════════════════════════════════════
 
   console.log('\n🎯 === VERIFICACIÓN DE ARQUITECTURA Y COMPONENTES ===');
 
   // Verificar documentación de la API
-  const documentacion = await realizarPeticionHTTP(`${API_BASE}/api/docs`);
+  const documentacion = await realizarPeticionHTTP(`${API_BASE}/api-docs.json`);
 
   mostrarResultadoPrueba(
-    'Documentación del Sistema',
+    'Documentación del Sistema (Swagger)',
     documentacion,
-    'Arquitectura MERN - Componentes desacoplados funcionando correctamente'
+    'Arquitectura Node.js + Express.js + MySQL - Componentes desacoplados funcionando correctamente'
   );
 
   // Verificar estado del sistema
-  const health = await realizarPeticionHTTP(`${API_BASE}/health`);
+  const health = await realizarPeticionHTTP(`${API_BASE}/api/health`);
 
   mostrarResultadoPrueba(
     'Estado del Sistema',
@@ -291,7 +291,7 @@ async function ejecutarPruebasEcosistemaEscolar() {
   console.log('══════════════════════════════════════════════════════════════════════');
   console.log('✅ Capa de Presentación: React.js (Simulada con fetch requests)');
   console.log('✅ Capa de Servicio: Node.js + Express.js (API REST funcionando)');
-  console.log('✅ Capa de Datos: MongoDB Atlas (Simulada con estructuras JSON)');
+  console.log('✅ Capa de Datos: MySQL + Sequelize ORM');
   console.log('✅ Protocolo de Comunicación: HTTP/HTTPS con intercambio bidireccional');
   console.log('✅ Flujo de Gestión del Docente: Autenticación → Validación → Emisión');
   console.log('✅ Flujo de Notificación: Recepción Reactiva → Confirmación → Trazabilidad');
@@ -305,7 +305,7 @@ async function ejecutarPruebasEcosistemaEscolar() {
 
   console.log('\n💡 Próximos pasos para producción:');
   console.log('   - Implementar autenticación JWT real');
-  console.log('   - Conectar a MongoDB Atlas real');
+  console.log('   - Configurar variables de entorno en producción');
   console.log('   - Desarrollar interfaz React.js');
   console.log('   - Implementar WebSockets para actualizaciones en tiempo real');
 }

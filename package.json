@@ -1,7 +1,7 @@
 {
   "name": "agenda-digital-escolar",
   "version": "1.0.0",
-  "description": "Ecosistema de comunicación bidireccional entre establecimiento educativo y apoderados - MySQL + Sequelize",
+  "description": "Proyecto escolar",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -33,7 +33,7 @@
     "trazabilidad",
     "reportes-escolares"
   ],
-  "author": "Desarrollador AIEP - Analista Programador",
+  "author": "Crusiris Nuñez",
   "license": "ISC",
   "repository": {
     "type": "git",
@@ -55,7 +55,7 @@
     "sequelize-cli": "^6.6.5"
   },
   "engines": {
-    "node": ">=14.0.0",
+    "node": ">=20.0.0",
     "npm": ">=6.0.0"
   }
 }

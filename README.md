@@ -2,7 +2,7 @@
 
 **Ecosistema de comunicación bidireccional entre establecimiento educativo y apoderados**
 
-Una aplicación web robusta y escalable desarrollada con el stack tecnológico MERN (MongoDB, Express, React y Node.js), que garantiza la integridad y disponibilidad de la información escolar en tiempo real.
+Una aplicación web robusta y escalable desarrollada con Node.js, Express y MySQL (Sequelize ORM), que garantiza la integridad y disponibilidad de la información escolar en tiempo real.
 
 ## Descripción Funcional
 
@@ -16,7 +16,7 @@ El flujo inicia con la autenticación del docente, quien accede a un panel centr
 - **Aviso Diario**: Comunicaciones generales del día escolar  
 - **Reporte de Salud**: Información médica y de salud de estudiantes
 
-El sistema valida la integridad de los datos en el cliente antes de enviarlos a la API en Node.js, donde se procesan y persisten en la base de datos NoSQL.
+El sistema valida la integridad de los datos en el cliente antes de enviarlos a la API en Node.js, donde se procesan y persisten en la base de datos relacional MySQL.
 
 #### B. Notificación y Recepción (Apoderado)
 Una vez almacenado el dato, la plataforma actualiza el muro de noticias del apoderado de forma reactiva. El flujo contempla un mecanismo de "Confirmación de Lectura", donde el apoderado interactúa con el sistema para cerrar el ciclo de comunicación.
@@ -34,9 +34,9 @@ Una vez almacenado el dato, la plataforma actualiza el muro de noticias del apod
 - **Reglas de Negocio**: Validación de permisos por curso (solo profesor jefe puede publicar)
 
 ### Capa de Datos (Persistencia)
-- **Tecnología**: MongoDB Atlas
-- **Formato**: Almacenamiento JSON (BSON) 
-- **Ventaja**: Alta flexibilidad para diversos tipos de reportes escolares
+- **Tecnología**: MySQL + Sequelize ORM
+- **Formato**: Tablas relacionales con integridad referencial
+- **Ventaja**: Consistencia transaccional y consultas relacionales eficientes
 
 ## Instalación
 
@@ -63,12 +63,12 @@ npm run dev
 npm start
 ```
 
-### Versión con Estructura Modular
+### Versión de desarrollo
 ```bash
-node app-structured.js
+npm run dev
 ```
 
-El servidor se ejecutará en `http://localhost:3000`
+El servidor se ejecutará en `http://localhost:8080`
 
 ## API Endpoints del Sistema Escolar
 
@@ -76,15 +76,19 @@ El servidor se ejecutará en `http://localhost:3000`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/api/docentes/login` | Autenticación del docente |
+| GET | `/api/docentes/perfil` | Perfil del docente autenticado |
 | GET | `/api/docentes/:id/cursos` | Cursos asignados al docente |
 | POST | `/api/docentes/reportes` | Crear reporte escolar |
+| GET | `/api/docentes/reportes` | Historial de reportes del docente |
+| GET | `/api/docentes/cursos/:cursoId/estudiantes` | Estudiantes de un curso |
 
 ### Notificación y Recepción  
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/api/apoderados/login` | Autenticación del apoderado |
 | GET | `/api/apoderados/muro` | Muro de noticias reactivo |
-| POST | `/api/apoderados/confirmar-lectura` | Confirmar lectura de reporte |
+| GET | `/api/apoderados/hijos` | Lista de hijos del apoderado |
+| GET | `/api/apoderados/reportes/:estudianteId` | Reportes de un estudiante específico |
 
 ### Gestión de Reportes
 | Método | Endpoint | Descripción |
@@ -93,7 +97,8 @@ El servidor se ejecutará en `http://localhost:3000`
 | POST | `/api/reportes/asistencia` | Crear reporte de asistencia |
 | POST | `/api/reportes/aviso-diario` | Crear aviso diario |
 | POST | `/api/reportes/salud` | Crear reporte de salud |
-| GET | `/api/reportes/estadisticas` | Estadísticas de confirmaciones |
+| GET | `/api/reportes/curso/:cursoId` | Reportes de un curso (con filtros) |
+| GET | `/api/reportes/estadisticas` | Estadísticas de reportes por tipo |
 
 ## Integración y Conectividad
 
@@ -106,34 +111,54 @@ La integración de componentes se realiza mediante protocolo **HTTP/HTTPS** util
 ## Estructura del Proyecto
 
 ```
-agenda/
-├── app.js                          # Servidor básico
-├── app-structured.js               # Servidor con arquitectura modular
+agenda-api/
+├── app.js                          # Servidor principal
+├── swagger.js                      # Definición OpenAPI (schemas)
+├── setup.js                        # Script de inicialización
 ├── package.json                    # Dependencias del proyecto
 ├── .env                           # Variables de entorno
+├── .nvmrc                         # Versión de Node.js requerida
 ├── README.md                      # Este archivo
-├── test-agenda-escolar.js         # Pruebas del sistema completo
-├── routes/                        # Rutas de la API
-│   ├── docentes.js               # Gestión del docente
-│   ├── apoderados.js             # Notificación y recepción  
-│   └── reportes.js               # Gestión de reportes
+├── routes/                        # Rutas de la API (con docs Swagger JSDoc)
+│   ├── docentes.js
+│   ├── apoderados.js
+│   ├── contactos.js
+│   └── reportes.js
 ├── controllers/                   # Lógica de negocio
-│   ├── docentesController.js     # Controlador de docentes
-│   ├── apoderadosController.js   # Controlador de apoderados
-│   └── reportesController.js     # Controlador de reportes
-├── models/                       # Modelos de datos
-│   ├── Docente.js                # Modelo de docente
-│   ├── Apoderado.js              # Modelo de apoderado
-│   └── ReporteEscolar.js         # Modelo de reporte escolar
-└── database/                     # Datos de prueba
-    └── inicializarDatos.js       # Script de inicialización
+│   ├── docentesController.js
+│   ├── apoderadosController.js
+│   ├── contactosController.js
+│   └── reportesController.js
+├── models/                        # Modelos Sequelize
+│   ├── Docente.js
+│   ├── Apoderado.js
+│   ├── Estudiante.js
+│   ├── Curso.js
+│   ├── ReporteEscolar.js
+│   ├── Contacto.js
+│   └── index.js
+├── database/                      # Conexión y utilidades de BD
+│   ├── connection.js
+│   ├── inicializarDatos.js
+│   └── create-tables.js
+└── tests/                         # Suite de pruebas
+    ├── run-all.js
+    ├── unit/
+    ├── integration/
+    ├── database/
+    └── scripts/
 ```
 
 ## Pruebas del Sistema
 
 ### Ejecutar Pruebas Completas
 ```bash
-node test-agenda-escolar.js
+npm test
+```
+
+### Ejecutar Pruebas Unitarias
+```bash
+npm run test:unit
 ```
 
 ### Casos de Prueba Incluidos
@@ -163,30 +188,35 @@ node test-agenda-escolar.js
 - Confirmaciones de lectura son obligatorias para ciertos tipos
 - Trazabilidad completa de todas las comunicaciones
 
-## Documentación de la API
+## Documentación Interactiva (Swagger)
 
-Accede a la documentación completa en: `http://localhost:3000/api/docs`
+Accede a la documentación completa con Swagger UI en: `http://localhost:8080/api-docs`
 
-Estado del sistema: `http://localhost:3000/health`
+Especificación OpenAPI en JSON: `http://localhost:8080/api-docs.json`
+
+Estado del sistema: `http://localhost:8080/api/health`
 
 ## Stack Tecnológico
 
-- **M**ongoDB Atlas - Base de datos NoSQL
-- **E**xpress.js - Framework web para Node.js  
-- **R**eact.js - Biblioteca de interfaz de usuario
-- **N**ode.js - Entorno de ejecución de JavaScript
+- **Node.js** - Entorno de ejecución de JavaScript
+- **Express.js** - Framework web para Node.js
+- **MySQL** - Base de datos relacional
+- **Sequelize ORM** - Mapeo objeto-relacional para MySQL
+- **React.js** (Frontend) - Biblioteca de interfaz de usuario (a implementar)
 
 ### Dependencias Principales
 - Express.js - Framework web
+- Sequelize + mysql2 - ORM y driver MySQL
+- bcrypt - Hash de contraseñas
 - CORS - Middleware para cross-origin requests
 - Body-parser - Parseo de cuerpos de petición
 - Dotenv - Gestión de variables de entorno
+- swagger-jsdoc + swagger-ui-express - Documentación interactiva
 - Nodemon - Desarrollo con recarga automática
 
 ## Próximos Pasos para Producción
 
 - [ ] **Autenticación JWT**: Implementar tokens seguros
-- [ ] **MongoDB Real**: Conectar a MongoDB Atlas  
 - [ ] **Frontend React**: Desarrollar interfaz de usuario
 - [ ] **WebSockets**: Notificaciones en tiempo real
 - [ ] **Notificaciones Push**: Alertas móviles
@@ -211,4 +241,4 @@ Este proyecto está bajo la Licencia ISC - ver el archivo LICENSE para detalles.
 ---
 
 **Desarrollado para el Instituto AIEP - Carrera de Analista Programador**  
-*Proyecto: Agenda Digital Escolar - Stack MERN*
+*Proyecto: Agenda Digital Escolar - Node.js + Express + MySQL*

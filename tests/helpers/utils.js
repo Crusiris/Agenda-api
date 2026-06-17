@@ -14,7 +14,7 @@ class HTTPTestHelper {
     return new Promise((resolve, reject) => {
       const defaultOptions = {
         hostname: 'localhost',
-        port: 3000,
+        port: 8080,
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
