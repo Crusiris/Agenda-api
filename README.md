@@ -101,15 +101,23 @@ El servidor se ejecutará en `http://localhost:8080`
 | GET | `/api/reportes/curso/:cursoId` | Reportes de un curso (con filtros) |
 | GET | `/api/reportes/estadisticas` | Estadísticas de reportes por tipo |
 
-### Gestión de Estudiantes
+### Gestión de Estudiantes (solo lectura)
+> Los estudiantes se cargan mediante el script `database/inicializarDatos.js`, no desde el frontend.
+
 | Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/estudiantes` | Listar todos los estudiantes (filtros: cursoId, activo) |
-| POST | `/api/estudiantes` | Crear un nuevo estudiante |
+|--------|----------|--------------|
+| GET | `/api/estudiantes` | Listar estudiantes (filtros: cursoId, activo) |
 | GET | `/api/estudiantes/:id` | Obtener estudiante por ID (incluye curso y apoderados) |
-| PUT | `/api/estudiantes/:id` | Actualizar datos del estudiante |
-| DELETE | `/api/estudiantes/:id` | Desactivar estudiante (soft delete) |
 | GET | `/api/estudiantes/:id/apoderados` | Listar apoderados vinculados al estudiante |
+
+### Anuncios (Ad)
+| Método | Endpoint | Descripción |
+|--------|----------|--------------|
+| GET | `/api/ad` | Listar anuncios (filtro: soloActivos) |
+| POST | `/api/ad` | Crear un anuncio |
+| GET | `/api/ad/:id` | Obtener anuncio por ID |
+| PUT | `/api/ad/:id` | Actualizar anuncio |
+| DELETE | `/api/ad/:id` | Desactivar anuncio (soft delete) |
 
 ### Contactos de Emergencia
 | Método | Endpoint | Descripción |
@@ -125,6 +133,18 @@ El servidor se ejecutará en `http://localhost:8080`
 |--------|----------|-------------|
 | GET | `/` | Información general de la API |
 | GET | `/api/health` | Estado de la API y de la base de datos |
+
+### Datos precargados (script de inicialización)
+> Los siguientes registros son creados únicamente por `database/inicializarDatos.js`:
+> - Cursos
+> - Docentes (con sus asignaciones a cursos)
+> - Estudiantes (con su curso asignado)
+> - Apoderados (con sus vínculos a estudiantes)
+
+### Datos gestionados desde el frontend
+- **Anuncios** (`/api/ad`) — CRUD completo
+- **Reportes** (`/api/reportes`) — creación y consulta
+- **Contactos** (`/api/contactos`) — CRUD completo
 
 ## Integración y Conectividad
 
@@ -150,13 +170,15 @@ agenda-api/
 │   ├── apoderados.js
 │   ├── contactos.js
 │   ├── reportes.js
-│   └── estudiantes.js
+│   ├── estudiantes.js             # Solo lectura
+│   └── ad.js
 ├── controllers/                   # Lógica de negocio
 │   ├── docentesController.js
 │   ├── apoderadosController.js
 │   ├── contactosController.js
 │   ├── reportesController.js
-│   └── estudiantesController.js
+│   ├── estudiantesController.js   # Solo lectura
+│   └── adController.js
 ├── models/                        # Modelos Sequelize
 │   ├── Docente.js
 │   ├── Apoderado.js

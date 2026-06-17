@@ -51,7 +51,11 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
       },
       {
         name: 'Estudiantes',
-        description: 'CRUD de estudiantes y gestión de sus apoderados'
+        description: 'Consulta de estudiantes cargados mediante el script de inicialización'
+      },
+      {
+        name: 'Anuncios',
+        description: 'Gestión de anuncios (Ad) — creados y administrados desde el frontend'
       },
       {
         name: 'Sistema',
@@ -192,6 +196,46 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
             direccion: { type: 'string', example: 'Av. Providencia 123' },
             edad: { type: 'integer', example: 10 },
             activo: { type: 'boolean', example: true }
+          }
+        },
+        // ─── Ad (Anuncio) ──────────────────────────────────────────
+        Ad: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            titulo: { type: 'string', example: 'Acto por aniversario del colegio' },
+            descripcion: { type: 'string', nullable: true, example: 'Este viernes celebramos 30 años.' },
+            imagenUrl: { type: 'string', nullable: true, example: 'https://example.com/img.jpg' },
+            enlaceUrl: { type: 'string', nullable: true, example: 'https://example.com/evento' },
+            activo: { type: 'boolean', example: true },
+            fechaInicio: { type: 'string', format: 'date-time', nullable: true, example: '2026-06-16T00:00:00.000Z' },
+            fechaFin: { type: 'string', format: 'date-time', nullable: true, example: '2026-06-20T23:59:59.000Z' },
+            createdAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        AdCreateRequest: {
+          type: 'object',
+          required: ['titulo'],
+          properties: {
+            titulo: { type: 'string', example: 'Acto por aniversario del colegio' },
+            descripcion: { type: 'string', example: 'Este viernes celebramos 30 años.' },
+            imagenUrl: { type: 'string', example: 'https://example.com/img.jpg' },
+            enlaceUrl: { type: 'string', example: 'https://example.com/evento' },
+            activo: { type: 'boolean', default: true },
+            fechaInicio: { type: 'string', format: 'date-time', example: '2026-06-16T00:00:00.000Z' },
+            fechaFin: { type: 'string', format: 'date-time', example: '2026-06-20T23:59:59.000Z' }
+          }
+        },
+        AdUpdateRequest: {
+          type: 'object',
+          properties: {
+            titulo: { type: 'string', example: 'Acto por aniversario del colegio' },
+            descripcion: { type: 'string', example: 'Este viernes celebramos 30 años.' },
+            imagenUrl: { type: 'string', example: 'https://example.com/img.jpg' },
+            enlaceUrl: { type: 'string', example: 'https://example.com/evento' },
+            activo: { type: 'boolean', example: false },
+            fechaInicio: { type: 'string', format: 'date-time', example: '2026-06-16T00:00:00.000Z' },
+            fechaFin: { type: 'string', format: 'date-time', example: '2026-06-20T23:59:59.000Z' }
           }
         },
         // ─── Reporte Escolar ───────────────────────────────────────
@@ -484,7 +528,7 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
   },
   // Los endpoints de docentes, apoderados, reportes y contactos
   // están documentados con JSDoc directamente en cada archivo de rutas.
-  apis: ['./routes/*.js']
+  apis: ['./routes/*.js', './swagger.js']
 };
 
 const swaggerSpec = swaggerJsdoc(options);
