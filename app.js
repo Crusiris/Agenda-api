@@ -14,6 +14,7 @@ const docentesRoutes = require('./routes/docentes');
 const apoderadosRoutes = require('./routes/apoderados');
 const contactosRoutes = require('./routes/contactos');
 const reportesRoutes = require('./routes/reportes');
+const estudiantesRoutes = require('./routes/estudiantes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -66,7 +67,8 @@ app.get('/', (req, res) => {
       docentes: '/api/docentes',
       apoderados: '/api/apoderados',
       contactos: '/api/contactos',
-      reportes: '/api/reportes'
+      reportes: '/api/reportes',
+      estudiantes: '/api/estudiantes'
     }
   });
 });
@@ -76,6 +78,7 @@ app.use('/api/docentes', docentesRoutes);
 app.use('/api/apoderados', apoderadosRoutes);
 app.use('/api/contactos', contactosRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/estudiantes', estudiantesRoutes);
 
 // Documentación Swagger — disponible en /api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -127,7 +130,8 @@ app.use('*', (req, res) => {
       'GET /api/docentes',
       'GET /api/apoderados',
       'GET /api/contactos',
-      'GET /api/reportes'
+      'GET /api/reportes',
+      'GET /api/estudiantes'
     ]
   });
 });

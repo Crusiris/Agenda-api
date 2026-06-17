@@ -50,6 +50,10 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
         description: 'CRUD de contactos de emergencia asociados a apoderados'
       },
       {
+        name: 'Estudiantes',
+        description: 'CRUD de estudiantes y gestión de sus apoderados'
+      },
+      {
         name: 'Sistema',
         description: 'Estado y salud del sistema'
       }
@@ -151,11 +155,43 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
           type: 'object',
           properties: {
             id: { type: 'integer', example: 5 },
+            rut: { type: 'string', nullable: true, example: '24890123-5' },
             nombres: { type: 'string', example: 'Valentina' },
             apellidos: { type: 'string', example: 'Pérez González' },
+            fechaNacimiento: { type: 'string', format: 'date', nullable: true, example: '2015-01-18' },
+            direccion: { type: 'string', nullable: true, example: 'Av. Providencia 123' },
+            edad: { type: 'integer', nullable: true, example: 9 },
             cursoId: { type: 'integer', example: 1 },
             activo: { type: 'boolean', example: true },
-            curso: { $ref: '#/components/schemas/Curso' }
+            createdAt: { type: 'string', format: 'date-time' },
+            curso: { $ref: '#/components/schemas/Curso' },
+            apoderados: { type: 'array', items: { $ref: '#/components/schemas/Apoderado' } }
+          }
+        },
+        EstudianteCreateRequest: {
+          type: 'object',
+          required: ['nombres', 'apellidos', 'cursoId'],
+          properties: {
+            nombres: { type: 'string', example: 'Valentina' },
+            apellidos: { type: 'string', example: 'Pérez González' },
+            rut: { type: 'string', example: '24890123-5' },
+            cursoId: { type: 'integer', example: 1 },
+            fechaNacimiento: { type: 'string', format: 'date', example: '2015-01-18' },
+            direccion: { type: 'string', example: 'Av. Providencia 123' },
+            edad: { type: 'integer', example: 9 }
+          }
+        },
+        EstudianteUpdateRequest: {
+          type: 'object',
+          properties: {
+            nombres: { type: 'string', example: 'Valentina' },
+            apellidos: { type: 'string', example: 'Pérez González' },
+            rut: { type: 'string', example: '24890123-5' },
+            cursoId: { type: 'integer', example: 2 },
+            fechaNacimiento: { type: 'string', format: 'date', example: '2015-01-18' },
+            direccion: { type: 'string', example: 'Av. Providencia 123' },
+            edad: { type: 'integer', example: 10 },
+            activo: { type: 'boolean', example: true }
           }
         },
         // ─── Reporte Escolar ───────────────────────────────────────
@@ -344,6 +380,24 @@ Los endpoints protegidos requieren pasar el ID en los siguientes headers:
               example: ['El RUT es obligatorio', 'Formato de email inválido']
             }
           }
+        }
+      },
+      responses: {
+        BadRequest: {
+          description: 'Parámetros o cuerpo inválido',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        },
+        NotFound: {
+          description: 'Recurso no encontrado',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        },
+        ValidationError: {
+          description: 'Error de validación de datos',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ValidationErrorResponse' } } }
+        },
+        InternalError: {
+          description: 'Error interno del servidor',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
         }
       },
       parameters: {

@@ -87,6 +87,7 @@ El servidor se ejecutará en `http://localhost:8080`
 |--------|----------|-------------|
 | POST | `/api/apoderados/login` | Autenticación del apoderado |
 | GET | `/api/apoderados/muro` | Muro de noticias reactivo |
+| POST | `/api/apoderados/confirmar-lectura` | Confirmar lectura de un reporte |
 | GET | `/api/apoderados/hijos` | Lista de hijos del apoderado |
 | GET | `/api/apoderados/reportes/:estudianteId` | Reportes de un estudiante específico |
 
@@ -99,6 +100,31 @@ El servidor se ejecutará en `http://localhost:8080`
 | POST | `/api/reportes/salud` | Crear reporte de salud |
 | GET | `/api/reportes/curso/:cursoId` | Reportes de un curso (con filtros) |
 | GET | `/api/reportes/estadisticas` | Estadísticas de reportes por tipo |
+
+### Gestión de Estudiantes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/estudiantes` | Listar todos los estudiantes (filtros: cursoId, activo) |
+| POST | `/api/estudiantes` | Crear un nuevo estudiante |
+| GET | `/api/estudiantes/:id` | Obtener estudiante por ID (incluye curso y apoderados) |
+| PUT | `/api/estudiantes/:id` | Actualizar datos del estudiante |
+| DELETE | `/api/estudiantes/:id` | Desactivar estudiante (soft delete) |
+| GET | `/api/estudiantes/:id/apoderados` | Listar apoderados vinculados al estudiante |
+
+### Contactos de Emergencia
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/contactos` | Listar todos los contactos activos |
+| POST | `/api/contactos` | Crear contacto de emergencia |
+| GET | `/api/contactos/:id` | Obtener contacto por ID |
+| PUT | `/api/contactos/:id` | Actualizar contacto |
+| DELETE | `/api/contactos/:id` | Desactivar contacto (soft delete) |
+
+### Sistema
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/` | Información general de la API |
+| GET | `/api/health` | Estado de la API y de la base de datos |
 
 ## Integración y Conectividad
 
@@ -113,22 +139,24 @@ La integración de componentes se realiza mediante protocolo **HTTP/HTTPS** util
 ```
 agenda-api/
 ├── app.js                          # Servidor principal
-├── swagger.js                      # Definición OpenAPI (schemas)
+├── swagger.js                      # Definición OpenAPI (schemas y componentes)
 ├── setup.js                        # Script de inicialización
 ├── package.json                    # Dependencias del proyecto
 ├── .env                           # Variables de entorno
-├── .nvmrc                         # Versión de Node.js requerida
+├── .nvmrc                         # Versión de Node.js requerida (24)
 ├── README.md                      # Este archivo
 ├── routes/                        # Rutas de la API (con docs Swagger JSDoc)
 │   ├── docentes.js
 │   ├── apoderados.js
 │   ├── contactos.js
-│   └── reportes.js
+│   ├── reportes.js
+│   └── estudiantes.js
 ├── controllers/                   # Lógica de negocio
 │   ├── docentesController.js
 │   ├── apoderadosController.js
 │   ├── contactosController.js
-│   └── reportesController.js
+│   ├── reportesController.js
+│   └── estudiantesController.js
 ├── models/                        # Modelos Sequelize
 │   ├── Docente.js
 │   ├── Apoderado.js
@@ -136,6 +164,9 @@ agenda-api/
 │   ├── Curso.js
 │   ├── ReporteEscolar.js
 │   ├── Contacto.js
+│   ├── DocEnteCurso.js            # Tabla intermedia docente ↔ curso
+│   ├── ApoderadoEstudiante.js     # Tabla intermedia apoderado ↔ estudiante
+│   ├── Ad.js
 │   └── index.js
 ├── database/                      # Conexión y utilidades de BD
 │   ├── connection.js
@@ -144,10 +175,147 @@ agenda-api/
 └── tests/                         # Suite de pruebas
     ├── run-all.js
     ├── unit/
+    │   ├── docente.test.js
+    │   ├── apoderado.test.js
+    │   ├── estudiante.test.js
+    │   ├── run-all-unit.js
+    │   ├── docente/
+    │   ├── apoderado/
+    │   └── estudiante/
     ├── integration/
     ├── database/
     └── scripts/
 ```
+
+## Esquema de Base de Datos
+
+### Diagrama Entidad-Relación
+
+```mermaid
+erDiagram
+    CURSOS {
+        int id PK
+        varchar nombre
+        varchar nivel
+        text descripcion
+        datetime created_at
+    }
+
+    DOCENTES {
+        int id PK
+        varchar rut UK
+        varchar nombres
+        varchar apellidos
+        varchar especialidad
+        varchar email UK
+        varchar password
+        varchar telefono
+        boolean activo
+        datetime fecha_ultimo_acceso
+        datetime created_at
+        datetime updated_at
+    }
+
+    DOCENTE_CURSO {
+        int docente_id FK
+        int curso_id FK
+    }
+
+    ESTUDIANTES {
+        int id PK
+        varchar rut UK
+        varchar nombres
+        varchar apellidos
+        date fecha_nacimiento
+        text direccion
+        int edad
+        int curso_id FK
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    APODERADOS {
+        int id PK
+        varchar rut UK
+        varchar nombres
+        varchar apellidos
+        varchar parentesco
+        varchar email UK
+        varchar password
+        varchar telefono
+        text direccion
+        datetime fecha_ultimo_acceso
+        boolean configuraciones_notificaciones
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    APODERADO_ESTUDIANTE {
+        int apoderado_id FK
+        int estudiante_id FK
+    }
+
+    CONTACTOS {
+        int id PK
+        int apoderado_id FK
+        varchar nombre
+        varchar parentesco
+        varchar telefono
+        varchar email
+        text observaciones
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    REPORTES_ESCOLARES {
+        int id PK
+        int docente_id FK
+        int curso_id FK
+        int estudiante_id FK
+        varchar tipo_reporte
+        varchar titulo
+        json contenido
+        datetime fecha
+        datetime created_at
+    }
+
+    AD {
+        int id PK
+        varchar titulo
+        text descripcion
+        varchar imagen_url
+        varchar enlace_url
+        boolean activo
+        datetime fecha_inicio
+        datetime fecha_fin
+        datetime created_at
+    }
+
+    CURSOS         ||--o{ DOCENTE_CURSO        : "pertenece a"
+    DOCENTES       ||--o{ DOCENTE_CURSO        : "imparte en"
+    CURSOS         ||--o{ ESTUDIANTES          : "tiene"
+    ESTUDIANTES    ||--o{ APODERADO_ESTUDIANTE : "vinculado a"
+    APODERADOS     ||--o{ APODERADO_ESTUDIANTE : "tiene"
+    APODERADOS     ||--o{ CONTACTOS            : "registra"
+    DOCENTES       ||--o{ REPORTES_ESCOLARES   : "crea"
+    CURSOS         ||--o{ REPORTES_ESCOLARES   : "tiene"
+    ESTUDIANTES    |o--o{ REPORTES_ESCOLARES   : "referenciado en"
+```
+
+### Relaciones del Modelo
+
+| Relación | Tipo | Tabla intermedia |
+|----------|------|-----------------|
+| Docente ↔ Curso | N:M | `docente_curso` |
+| Apoderado ↔ Estudiante | N:M | `apoderado_estudiante` |
+| Curso → Estudiante | 1:N | — |
+| Apoderado → Contacto | 1:N | — |
+| Docente → ReporteEscolar | 1:N | — |
+| Curso → ReporteEscolar | 1:N | — |
+| Estudiante → ReporteEscolar | 1:N (opcional) | — |
 
 ## Pruebas del Sistema
 
@@ -198,11 +366,10 @@ Estado del sistema: `http://localhost:8080/api/health`
 
 ## Stack Tecnológico
 
-- **Node.js** - Entorno de ejecución de JavaScript
+- **Node.js** (v24) - Entorno de ejecución de JavaScript
 - **Express.js** - Framework web para Node.js
 - **MySQL** - Base de datos relacional
 - **Sequelize ORM** - Mapeo objeto-relacional para MySQL
-- **React.js** (Frontend) - Biblioteca de interfaz de usuario (a implementar)
 
 ### Dependencias Principales
 - Express.js - Framework web

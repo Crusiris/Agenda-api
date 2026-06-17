@@ -90,6 +90,22 @@ const TEST_DATA = {
     parentesco: 'Padre',
     telefono: '+56987654321'
   },
+
+  CURSO: {
+    nombre: 'Test Curso 1A',
+    nivel: '1° Básico',
+    descripcion: 'Curso de prueba'
+  },
+
+  ESTUDIANTE: {
+    rut: '20111222-3',
+    nombres: 'Test',
+    apellidos: 'Estudiante López',
+    edad: 7,
+    fechaNacimiento: '2017-05-15',
+    direccion: 'Av. Test 123'
+    // cursoId se agrega dinámicamente en el test
+  },
   
   CONTACTO: {
     nombre: 'Test Contacto',

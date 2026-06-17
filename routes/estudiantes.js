@@ -1,0 +1,259 @@
+const express = require('express');
+const router = express.Router();
+const estudiantesController = require('../controllers/estudiantesController');
+
+/**
+ * @swagger
+ * tags:
+ *   name: Estudiantes
+ *   description: CRUD de estudiantes y gestión de sus apoderados
+ */
+
+/**
+ * @swagger
+ * /api/estudiantes:
+ *   get:
+ *     tags: [Estudiantes]
+ *     summary: Listar estudiantes
+ *     description: Retorna la lista de todos los estudiantes. Se puede filtrar por curso o estado.
+ *     parameters:
+ *       - in: query
+ *         name: cursoId
+ *         schema:
+ *           type: integer
+ *         description: Filtrar por ID de curso
+ *       - in: query
+ *         name: activo
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por estado activo/inactivo (por defecto retorna todos)
+ *     responses:
+ *       200:
+ *         description: Lista de estudiantes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Estudiante'
+ *                 total:
+ *                   type: integer
+ *                   example: 6
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.get('/', estudiantesController.listarEstudiantes);
+
+/**
+ * @swagger
+ * /api/estudiantes:
+ *   post:
+ *     tags: [Estudiantes]
+ *     summary: Crear un nuevo estudiante
+ *     description: Registra un nuevo estudiante en el sistema y lo asigna a un curso existente.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EstudianteCreateRequest'
+ *     responses:
+ *       201:
+ *         description: Estudiante creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 mensaje:
+ *                   type: string
+ *                   example: Estudiante creado exitosamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Estudiante'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       409:
+ *         description: RUT duplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       422:
+ *         $ref: '#/components/responses/ValidationError'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.post('/', estudiantesController.crearEstudiante);
+
+/**
+ * @swagger
+ * /api/estudiantes/{id}:
+ *   get:
+ *     tags: [Estudiantes]
+ *     summary: Obtener un estudiante por ID
+ *     description: Retorna los datos completos de un estudiante, incluyendo su curso y apoderados.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del estudiante
+ *     responses:
+ *       200:
+ *         description: Datos del estudiante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Estudiante'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.get('/:id', estudiantesController.obtenerEstudiante);
+
+/**
+ * @swagger
+ * /api/estudiantes/{id}:
+ *   put:
+ *     tags: [Estudiantes]
+ *     summary: Actualizar un estudiante
+ *     description: Modifica los datos de un estudiante existente. Solo se actualizan los campos enviados.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del estudiante
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EstudianteUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: Estudiante actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 mensaje:
+ *                   type: string
+ *                   example: Estudiante actualizado exitosamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Estudiante'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       422:
+ *         $ref: '#/components/responses/ValidationError'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.put('/:id', estudiantesController.actualizarEstudiante);
+
+/**
+ * @swagger
+ * /api/estudiantes/{id}:
+ *   delete:
+ *     tags: [Estudiantes]
+ *     summary: Desactivar un estudiante (soft delete)
+ *     description: Marca al estudiante como inactivo (`activo=false`). No elimina el registro de la base de datos.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del estudiante
+ *     responses:
+ *       200:
+ *         description: Estudiante desactivado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 mensaje:
+ *                   type: string
+ *                   example: Estudiante desactivado exitosamente
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.delete('/:id', estudiantesController.desactivarEstudiante);
+
+/**
+ * @swagger
+ * /api/estudiantes/{id}/apoderados:
+ *   get:
+ *     tags: [Estudiantes]
+ *     summary: Obtener apoderados de un estudiante
+ *     description: Retorna la lista de apoderados vinculados a un estudiante (relación N:M).
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del estudiante
+ *     responses:
+ *       200:
+ *         description: Apoderados del estudiante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     estudiante:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         nombres:
+ *                           type: string
+ *                         apellidos:
+ *                           type: string
+ *                     apoderados:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Apoderado'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.get('/:id/apoderados', estudiantesController.listarApoderadosPorEstudiante);
+
+module.exports = router;

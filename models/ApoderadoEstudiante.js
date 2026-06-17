@@ -2,19 +2,20 @@ const { DataTypes } = require('sequelize');
 
 const ApoderadoEstudiante = (sequelize) => {
   return sequelize.define('ApoderadoEstudiante', {
-    apoderado_id: {
+    apoderadoId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       references: { model: 'apoderados', key: 'id' }
     },
-    estudiante_id: {
+    estudianteId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       references: { model: 'estudiantes', key: 'id' }
     }
   }, {
     tableName: 'apoderado_estudiante',
-    timestamps: false
+    timestamps: false,
+    underscored: true
   });
 };
 

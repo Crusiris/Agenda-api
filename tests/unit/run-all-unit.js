@@ -8,6 +8,7 @@
 
 const DocenteTestSuite = require('./docente/run-all-docente');
 const ApoderadoTestSuite = require('./apoderado/run-all-apoderado');
+const { runAllEstudianteTests } = require('./estudiante/run-all-estudiante');
 
 class UnitTestMasterSuite {
   constructor() {
@@ -22,13 +23,14 @@ class UnitTestMasterSuite {
     console.log(this.suiteName);
     console.log('='.repeat(70));
     console.log('🎯 Ejecutando TODOS los tests unitarios del proyecto');
-    console.log('📦 Modelos: Docente, Apoderado');
+    console.log('📦 Modelos: Docente, Apoderado, Estudiante');
     console.log('🗂️  Tests organizados por carpetas y categorías');
     console.log('');
 
     const suites = [
-      { name: 'Modelo Docente', class: DocenteTestSuite },
-      { name: 'Modelo Apoderado', class: ApoderadoTestSuite }
+      { name: 'Modelo Docente',     class: DocenteTestSuite },
+      { name: 'Modelo Apoderado',   class: ApoderadoTestSuite },
+      { name: 'Modelo Estudiante',  class: null, fn: runAllEstudianteTests }
     ];
 
     for (const suite of suites) {
@@ -36,23 +38,18 @@ class UnitTestMasterSuite {
       console.log('='.repeat(50));
 
       try {
-        const testSuite = new suite.class();
-        
-        // Capturar salida para obtener estadísticas
-        const originalLog = console.log;
-        let output = '';
-        console.log = (...args) => {
-          output += args.join(' ') + '\n';
-          originalLog(...args);
-        };
+        let stats;
 
-        await testSuite.runAllTests();
-        
-        // Restaurar console.log
-        console.log = originalLog;
+        if (suite.fn) {
+          // Suite basada en función directa (ej: Estudiante)
+          const result = await suite.fn();
+          stats = { passed: result.passed || 0, failed: result.failed || 0, categories: [] };
+        } else {
+          const testSuite = new suite.class();
+          await testSuite.runAllTests();
+          stats = this.extractStats(testSuite);
+        }
 
-        // Obtener estadísticas del suite
-        const stats = this.extractStats(testSuite);
         this.totalPassed += stats.passed;
         this.totalFailed += stats.failed;
 

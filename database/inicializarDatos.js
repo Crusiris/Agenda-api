@@ -3,7 +3,7 @@
  * Utiliza Sequelize ORM para poblar MySQL con datos de ejemplo
  */
 
-const { connect, syncModels, getInstance } = require('./connection');
+const { connect, syncModels } = require('./connection');
 const { initializeModels } = require('../models');
 
 class BaseDatosEscolar {
@@ -15,26 +15,18 @@ class BaseDatosEscolar {
     try {
       console.log('📚 Inicializando Base de Datos - Agenda Digital Escolar');
       console.log('🏗️ Implementando arquitectura con MySQL + Sequelize ORM');
-      
-      // Conectar a la base de datos
+
       await connect();
-      
-      // Sincronizar modelos (crear tablas)
-      await syncModels(false); // false = no eliminar datos existentes
-      
-      // Inicializar modelos
+      await syncModels(false);
       this.models = initializeModels();
-      
-      // Verificar si ya existen datos
+
       const docenteCount = await this.models.Docente.count();
       if (docenteCount > 0) {
         console.log('✅ Los datos ya están inicializados');
         return;
       }
-      
-      // Crear datos de ejemplo
+
       await this.crearDatosEjemplo();
-      
       console.log('✅ Datos inicializados correctamente');
     } catch (error) {
       console.error('❌ Error inicializando datos:', error);
@@ -44,197 +36,177 @@ class BaseDatosEscolar {
 
   async crearDatosEjemplo() {
     console.log('📝 Creando datos de ejemplo...');
-    
-    // Crear docentes
-    const docentes = await this.crearDocentes();
+
+    const cursos = await this.crearCursos();
+    console.log(`🏫 ${cursos.length} cursos creados`);
+
+    const docentes = await this.crearDocentes(cursos);
     console.log(`👨‍🏫 ${docentes.length} docentes creados`);
-    
-    // Crear apoderados
-    const apoderados = await this.crearApoderados();
+
+    const estudiantes = await this.crearEstudiantes(cursos);
+    console.log(`🎒 ${estudiantes.length} estudiantes creados`);
+
+    const apoderados = await this.crearApoderados(estudiantes);
     console.log(`👨‍👩‍👧‍👦 ${apoderados.length} apoderados creados`);
-    
-    // Crear contactos para los apoderados
+
     await this.crearContactos(apoderados);
     console.log('📞 Contactos de emergencia creados');
-    
-    // Crear reportes de ejemplo
-    const reportes = await this.crearReportes(docentes);
+
+    const reportes = await this.crearReportes(docentes, cursos, estudiantes);
     console.log(`📋 ${reportes.length} reportes de ejemplo creados`);
   }
 
-  async crearDocentes() {
+  async crearCursos() {
+    const cursosData = [
+      { nombre: '1° Básico A', nivel: '1° Básico',  descripcion: 'Primer año básico, sección A' },
+      { nombre: '2° Básico B', nivel: '2° Básico',  descripcion: 'Segundo año básico, sección B' },
+      { nombre: '3° Básico A', nivel: '3° Básico',  descripcion: 'Tercer año básico, sección A' },
+      { nombre: '4° Básico B', nivel: '4° Básico',  descripcion: 'Cuarto año básico, sección B' },
+      { nombre: '5° Básico A', nivel: '5° Básico',  descripcion: 'Quinto año básico, sección A' },
+      { nombre: '6° Básico B', nivel: '6° Básico',  descripcion: 'Sexto año básico, sección B' }
+    ];
+
+    const cursos = [];
+    for (const data of cursosData) {
+      cursos.push(await this.models.Curso.create(data));
+    }
+    return cursos;
+  }
+
+  // cursos[0]=1A, [1]=2B, [2]=3A, [3]=4B, [4]=5A, [5]=6B
+  async crearDocentes(cursos) {
     const docentesData = [
       {
         rut: '12345678-9',
-        nombre: 'María González Pérez',
+        nombres: 'María',
+        apellidos: 'González Pérez',
         email: 'maria.gonzalez@colegio.cl',
         password: '123456',
-        cursos: ['1A', '2B'],
-        asignatura: 'Matemáticas',
-        esProfesorJefe: true
+        especialidad: 'Matemáticas',
+        telefono: '+56987000001',
+        _cursos: [cursos[0].id, cursos[1].id]
       },
       {
         rut: '87654321-K',
-        nombre: 'Carlos Rodríguez Silva',
+        nombres: 'Carlos',
+        apellidos: 'Rodríguez Silva',
         email: 'carlos.rodriguez@colegio.cl',
         password: '123456',
-        cursos: ['3A', '4B'],
-        asignatura: 'Lenguaje y Comunicación',
-        esProfesorJefe: true
+        especialidad: 'Lenguaje y Comunicación',
+        telefono: '+56987000002',
+        _cursos: [cursos[2].id, cursos[3].id]
       },
       {
         rut: '11223344-5',
-        nombre: 'Ana Martínez López',
+        nombres: 'Ana',
+        apellidos: 'Martínez López',
         email: 'ana.martinez@colegio.cl',
         password: '123456',
-        cursos: ['1A', '2A', '3A'],
-        asignatura: 'Ciencias Naturales',
-        esProfesorJefe: false
+        especialidad: 'Ciencias Naturales',
+        telefono: '+56987000003',
+        _cursos: [cursos[0].id, cursos[2].id]
       },
       {
         rut: '55667788-9',
-        nombre: 'Pedro Sánchez Morales',
+        nombres: 'Pedro',
+        apellidos: 'Sánchez Morales',
         email: 'pedro.sanchez@colegio.cl',
         password: '123456',
-        cursos: ['5A', '6B'],
-        asignatura: 'Educación Física',
-        esProfesorJefe: false
+        especialidad: 'Educación Física',
+        telefono: '+56987000004',
+        _cursos: [cursos[4].id, cursos[5].id]
       }
     ];
 
     const docentes = [];
-    for (const data of docentesData) {
+    for (const { _cursos, ...data } of docentesData) {
       const docente = await this.models.Docente.create(data);
+      await docente.setCursos(_cursos);
       docentes.push(docente);
     }
-    
     return docentes;
   }
 
-  async crearApoderados() {
+  // cursos[0]=1A, [1]=2B, [2]=3A, [3]=4B, [4]=5A, [5]=6B
+  async crearEstudiantes(cursos) {
+    const estudiantesData = [
+      { rut: '20456789-1', nombres: 'Sofía',    apellidos: 'Herrera Morales',   cursoId: cursos[0].id, edad: 6,  fechaNacimiento: '2018-03-12' },
+      { rut: '21567890-2', nombres: 'Diego',    apellidos: 'Fernández Silva',   cursoId: cursos[2].id, edad: 8,  fechaNacimiento: '2016-07-20' },
+      { rut: '22678901-3', nombres: 'Camila',   apellidos: 'Fernández Silva',   cursoId: cursos[4].id, edad: 10, fechaNacimiento: '2014-11-05' },
+      { rut: '23789012-4', nombres: 'Matías',   apellidos: 'López Torres',      cursoId: cursos[1].id, edad: 7,  fechaNacimiento: '2017-09-30' },
+      { rut: '24890123-5', nombres: 'Valentina',apellidos: 'Muñoz García',      cursoId: cursos[3].id, edad: 9,  fechaNacimiento: '2015-01-18' },
+      { rut: '25901234-6', nombres: 'Tomás',    apellidos: 'Castro Vera',       cursoId: cursos[0].id, edad: 6,  fechaNacimiento: '2018-06-25' }
+    ];
+
+    const estudiantes = [];
+    for (const data of estudiantesData) {
+      estudiantes.push(await this.models.Estudiante.create(data));
+    }
+    return estudiantes;
+  }
+
+  // estudiantes[0]=Sofía(1A), [1]=Diego(3A), [2]=Camila(5A),
+  //              [3]=Matías(2B), [4]=Valentina(4B), [5]=Tomás(1A)
+  async crearApoderados(estudiantes) {
     const apoderadosData = [
       {
         rut: '16789012-3',
-        nombre: 'Patricia Morales Jiménez',
+        nombres: 'Patricia',
+        apellidos: 'Morales Jiménez',
+        parentesco: 'Madre',
         email: 'patricia.morales@gmail.com',
         password: '123456',
         telefono: '+56987654321',
-        hijos: [
-          {
-            nombre: 'Sofía Herrera Morales',
-            rut: '20456789-1',
-            curso: '1A',
-            edad: 6
-          }
-        ]
+        _hijos: [estudiantes[0].id]
       },
       {
         rut: '17890123-4',
-        nombre: 'Roberto Fernández Castro',
+        nombres: 'Roberto',
+        apellidos: 'Fernández Castro',
+        parentesco: 'Padre',
         email: 'roberto.fernandez@outlook.com',
         password: '123456',
         telefono: '+56976543210',
-        hijos: [
-          {
-            nombre: 'Diego Fernández Silva',
-            rut: '21567890-2',
-            curso: '3A',
-            edad: 8
-          },
-          {
-            nombre: 'Camila Fernández Silva',
-            rut: '22678901-3',
-            curso: '5A',
-            edad: 10
-          }
-        ]
+        _hijos: [estudiantes[1].id, estudiantes[2].id]
       },
       {
         rut: '18901234-5',
-        nombre: 'Carolina López Vega',
+        nombres: 'Carolina',
+        apellidos: 'López Vega',
+        parentesco: 'Madre',
         email: 'carolina.lopez@yahoo.com',
         password: '123456',
         telefono: '+56965432109',
-        hijos: [
-          {
-            nombre: 'Matías López Torres',
-            rut: '23789012-4',
-            curso: '2B',
-            edad: 7
-          }
-        ]
+        _hijos: [estudiantes[3].id]
       },
       {
         rut: '19012345-6',
-        nombre: 'Andrés Muñoz Rojas',
+        nombres: 'Andrés',
+        apellidos: 'Muñoz Rojas',
+        parentesco: 'Padre',
         email: 'andres.munoz@gmail.com',
         password: '123456',
         telefono: '+56954321098',
-        hijos: [
-          {
-            nombre: 'Valentina Muñoz García',
-            rut: '24890123-5',
-            curso: '4B',
-            edad: 9
-          }
-        ]
+        _hijos: [estudiantes[4].id]
       }
     ];
 
     const apoderados = [];
-    for (const data of apoderadosData) {
+    for (const { _hijos, ...data } of apoderadosData) {
       const apoderado = await this.models.Apoderado.create(data);
+      await apoderado.setEstudiantes(_hijos);
       apoderados.push(apoderado);
     }
-    
     return apoderados;
   }
 
   async crearContactos(apoderados) {
     const contactosData = [
-      // Contactos para Patricia Morales
-      {
-        nombre: 'Juan Carlos Herrera',
-        telefono: '+56987654322',
-        email: 'juan.herrera@gmail.com',
-        tipo: 'principal',
-        relacion: 'Padre',
-        apoderadoId: apoderados[0].id
-      },
-      {
-        nombre: 'Abuela Carmen',
-        telefono: '+56912345678',
-        tipo: 'emergencia',
-        relacion: 'Abuela',
-        apoderadoId: apoderados[0].id
-      },
-      // Contactos para Roberto Fernández
-      {
-        nombre: 'Sandra Silva Pérez',
-        telefono: '+56976543211',
-        email: 'sandra.silva@gmail.com',
-        tipo: 'principal',
-        relacion: 'Madre',
-        apoderadoId: apoderados[1].id
-      },
-      // Contactos para Carolina López
-      {
-        nombre: 'Miguel Torres López',
-        telefono: '+56965432108',
-        email: 'miguel.torres@gmail.com',
-        tipo: 'principal',
-        relacion: 'Padre',
-        apoderadoId: apoderados[2].id
-      },
-      // Contactos para Andrés Muñoz
-      {
-        nombre: 'Lorena García Ruiz',
-        telefono: '+56954321097',
-        email: 'lorena.garcia@gmail.com',
-        tipo: 'principal',
-        relacion: 'Madre',
-        apoderadoId: apoderados[3].id
-      }
+      { nombre: 'Juan Carlos Herrera', telefono: '+56987654322', email: 'juan.herrera@gmail.com',  parentesco: 'Padre',   apoderadoId: apoderados[0].id },
+      { nombre: 'Abuela Carmen',        telefono: '+56912345678',                                   parentesco: 'Abuela',  apoderadoId: apoderados[0].id },
+      { nombre: 'Sandra Silva Pérez',   telefono: '+56976543211', email: 'sandra.silva@gmail.com',  parentesco: 'Madre',   apoderadoId: apoderados[1].id },
+      { nombre: 'Miguel Torres López',  telefono: '+56965432108', email: 'miguel.torres@gmail.com', parentesco: 'Padre',   apoderadoId: apoderados[2].id },
+      { nombre: 'Lorena García Ruiz',   telefono: '+56954321097', email: 'lorena.garcia@gmail.com', parentesco: 'Madre',   apoderadoId: apoderados[3].id }
     ];
 
     for (const data of contactosData) {
@@ -242,81 +214,77 @@ class BaseDatosEscolar {
     }
   }
 
-  async crearReportes(docentes) {
-    const fechaHoy = new Date().toISOString().split('T')[0];
-    
+  async crearReportes(docentes, cursos, estudiantes) {
+    const fechaHoy = new Date();
+
     const reportesData = [
       {
-        tipo: 'asistencia',
-        curso: '1A',
         docenteId: docentes[0].id,
-        fechaReporte: fechaHoy,
+        cursoId: cursos[0].id,
+        tipoReporte: 'asistencia',
+        titulo: 'Asistencia diaria — 1° Básico A',
+        fecha: fechaHoy,
         contenido: {
-          fecha: fechaHoy,
           presentes: 28,
           ausentes: 2,
           atrasados: 1,
-          estudiantesAusentes: ['Sofía Herrera Morales'],
+          estudiantesAusentes: [`${estudiantes[0].nombres} ${estudiantes[0].apellidos}`],
           observaciones: 'Clase normal, buena participación'
         }
       },
       {
-        tipo: 'aviso-diario',
-        curso: '3A',
         docenteId: docentes[1].id,
-        fechaReporte: fechaHoy,
+        cursoId: cursos[2].id,
+        tipoReporte: 'aviso-diario',
+        titulo: 'Reunión de Apoderados',
+        fecha: fechaHoy,
         contenido: {
-          titulo: 'Reunión de Apoderados',
-          mensaje: 'Se solicita la asistencia de todos los apoderados para la reunión del próximo viernes 15 de noviembre a las 19:00 hrs.',
-          fechaVencimiento: '2024-11-15',
+          mensaje: 'Se solicita la asistencia de todos los apoderados el próximo viernes a las 19:00 hrs.',
           requiereConfirmacion: true
         }
       },
       {
-        tipo: 'reporte-salud',
-        curso: '2B',
         docenteId: docentes[2].id,
-        fechaReporte: fechaHoy,
+        cursoId: cursos[1].id,
+        estudianteId: estudiantes[3].id,
+        tipoReporte: 'reporte-salud',
+        titulo: 'Incidente de salud — Matías López',
+        fecha: fechaHoy,
         contenido: {
-          estudiante: 'Matías López Torres',
           sintomas: ['dolor de cabeza', 'malestar general'],
           temperatura: 37.2,
-          accionesTomadas: 'Se contactó a enfermería y se comunicó con el apoderado',
-          requiereSeguimiento: true,
-          contactoApoderado: true
+          accionesTomadas: 'Se contactó a enfermería y al apoderado',
+          requiereSeguimiento: true
         }
       }
     ];
 
     const reportes = [];
     for (const data of reportesData) {
-      const reporte = await this.models.ReporteEscolar.create(data);
-      reportes.push(reporte);
+      reportes.push(await this.models.ReporteEscolar.create(data));
     }
-    
     return reportes;
   }
 
-  // Método para obtener estadísticas de la base de datos
   async obtenerEstadisticas() {
     try {
       const stats = {
-        docentes: await this.models.Docente.count(),
-        apoderados: await this.models.Apoderado.count(),
-        contactos: await this.models.Contacto.count(),
-        reportes: await this.models.ReporteEscolar.count(),
-        reportesUrgentes: await this.models.ReporteEscolar.count({
-          where: { prioridad: 'urgente' }
-        })
+        cursos:      await this.models.Curso.count(),
+        docentes:    await this.models.Docente.count(),
+        estudiantes: await this.models.Estudiante.count(),
+        apoderados:  await this.models.Apoderado.count(),
+        contactos:   await this.models.Contacto.count(),
+        reportes:    await this.models.ReporteEscolar.count()
       };
-      
+
       console.log('📊 Estadísticas de la Base de Datos:');
-      console.log(`   👨‍🏫 Docentes: ${stats.docentes}`);
-      console.log(`   👨‍👩‍👧‍👦 Apoderados: ${stats.apoderados}`);
-      console.log(`   📞 Contactos: ${stats.contactos}`);
-      console.log(`   📋 Reportes: ${stats.reportes}`);
-      console.log(`   🚨 Reportes Urgentes: ${stats.reportesUrgentes}`);
-      
+      console.log(`   🏫 Cursos:      ${stats.cursos}`);
+      console.log(`   👨‍🏫 Docentes:    ${stats.docentes}`);
+      console.log(`   🎒 Estudiantes: ${stats.estudiantes}`);
+      console.log(`   👨‍👩‍👧‍👦 Apoderados:  ${stats.apoderados}`);
+      console.log(`   📞 Contactos:   ${stats.contactos}`);
+      console.log(`   📋 Reportes:    ${stats.reportes}`);
+
       return stats;
     } catch (error) {
       console.error('Error obteniendo estadísticas:', error);
@@ -325,7 +293,6 @@ class BaseDatosEscolar {
   }
 }
 
-// Función principal para inicializar
 const inicializarBaseDatos = async () => {
   const baseDatos = new BaseDatosEscolar();
   await baseDatos.inicializar();
