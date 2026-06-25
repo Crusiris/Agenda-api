@@ -141,6 +141,17 @@ El servidor se ejecutará en `http://localhost:8080`
 > - Estudiantes (con su curso asignado)
 > - Apoderados (con sus vínculos a estudiantes)
 
+### Credenciales de acceso (datos de prueba)
+
+> Las contraseñas se almacenan con hash **bcrypt**. Si se reinicializa la base de datos con `npm run setup`, las credenciales se recrean automáticamente.
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Docente | `juan@colegio.cl` | `123456` |
+| Docente | `maria@colegio.cl` | `123456` |
+| Apoderado | `ana@email.cl` | `123456` |
+| Apoderado | `carlos@email.cl` | `123456` |
+
 ### Datos gestionados desde el frontend
 - **Anuncios** (`/api/ad`) — CRUD completo
 - **Reportes** (`/api/reportes`) — creación y consulta
