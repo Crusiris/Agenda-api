@@ -4,7 +4,7 @@
  */
 
 const { connect, syncModels, disconnect } = require('./database/connection');
-const { initializeModels } = require('./models');
+const { initializeModels } = require('../models');
 
 const createTables = async () => {
   try {
