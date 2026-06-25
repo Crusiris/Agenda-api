@@ -429,5 +429,5 @@ Este proyecto está bajo la Licencia ISC - ver el archivo LICENSE para detalles.
 
 ---
 
-**Desarrollado para el Instituto AIEP - Carrera de Analista Programador**  
+**Desarrollado por Crusiris Nuñez**
 *Proyecto: Agenda Digital Escolar - Node.js + Express + MySQL*
