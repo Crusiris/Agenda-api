@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 const { getModels } = require('../models');
 
 // Autenticación del docente
@@ -183,10 +184,23 @@ const crearReporte = async (req, res) => {
 const obtenerReportes = async (req, res) => {
   try {
     const docenteId = req.headers['x-docente-id'] || 1;
+    const { tipoReporte, fechaDesde, fechaHasta } = req.query;
     const { ReporteEscolar, Curso, Estudiante } = getModels();
 
+    const where = { docenteId: parseInt(docenteId) };
+    if (tipoReporte) where.tipoReporte = tipoReporte;
+    if (fechaDesde || fechaHasta) {
+      where.fecha = {};
+      if (fechaDesde) where.fecha[Op.gte] = new Date(fechaDesde);
+      if (fechaHasta) {
+        const hasta = new Date(fechaHasta);
+        hasta.setHours(23, 59, 59, 999);
+        where.fecha[Op.lte] = hasta;
+      }
+    }
+
     const reportes = await ReporteEscolar.findAll({
-      where: { docenteId: parseInt(docenteId) },
+      where,
       include: [
         { model: Curso, as: 'curso', attributes: ['id', 'nombre', 'nivel'] },
         { model: Estudiante, as: 'estudiante', attributes: ['id', 'nombres', 'apellidos'], required: false }
