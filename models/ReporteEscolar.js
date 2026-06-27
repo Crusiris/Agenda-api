@@ -46,6 +46,11 @@ const ReporteEscolar = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
+    },
+    leidoPor: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: []
     }
   }, {
     tableName: 'reportes_escolares',

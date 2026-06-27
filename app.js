@@ -6,7 +6,7 @@ const swaggerSpec = require('./swagger');
 require('dotenv').config();
 
 // Importar configuración de base de datos y modelos
-const { connect, setupEvents, syncModels } = require('./database/connection');
+const { connect, setupEvents, syncModels, query } = require('./database/connection');
 const { initializeModels } = require('./models');
 
 // Importar rutas
@@ -49,7 +49,15 @@ const initializeDatabase = async () => {
     
     // Inicializar modelos
     initializeModels();
-    
+
+    // Migración: agregar columna leido_por si no existe
+    try {
+      await query('ALTER TABLE reportes_escolares ADD COLUMN leido_por JSON NULL');
+      console.log('✅ Migración: columna leido_por agregada');
+    } catch {
+      // La columna ya existe, continuar sin error
+    }
+
     console.log('✅ Base de datos MySQL conectada y modelos inicializados');
   } catch (error) {
     console.error('❌ Error inicializando base de datos:', error);

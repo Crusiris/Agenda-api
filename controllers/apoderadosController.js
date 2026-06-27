@@ -71,7 +71,7 @@ const autenticarApoderado = async (req, res) => {
 // Obtener muro de noticias del apoderado
 const obtenerMuroNoticias = async (req, res) => {
   try {
-    const apoderadoId = req.headers['x-apoderado-id'] || 1;
+    const apoderadoId = Number(req.headers['x-apoderado-id'] || 1);
     const { Apoderado, ReporteEscolar, Estudiante, Curso } = getModels();
 
     const apoderado = await Apoderado.findByPk(apoderadoId, {
@@ -96,12 +96,18 @@ const obtenerMuroNoticias = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
+    const noticiasConLeido = reportes.map(r => {
+      const raw = r.toJSON();
+      const leidoPor = Array.isArray(raw.leidoPor) ? raw.leidoPor : [];
+      return { ...raw, leido: leidoPor.includes(apoderadoId) };
+    });
+
     res.status(200).json({
       success: true,
       mensaje: 'Muro de noticias actualizado',
       data: {
-        totalNoticias: reportes.length,
-        noticias: reportes,
+        totalNoticias: noticiasConLeido.length,
+        noticias: noticiasConLeido,
         ultimaActualizacion: new Date().toISOString()
       }
     });
@@ -115,10 +121,9 @@ const obtenerMuroNoticias = async (req, res) => {
 };
 
 // Confirmar lectura de un reporte
-// NOTA: La tabla confirmaciones_lectura aún no existe en el esquema actual.
-// Este endpoint es un placeholder para retrocompatibilidad con el cliente.
 const confirmarLectura = async (req, res) => {
   try {
+    const apoderadoId = Number(req.headers['x-apoderado-id'] || 1);
     const { reporteId } = req.body;
 
     if (!reporteId) {
@@ -138,11 +143,18 @@ const confirmarLectura = async (req, res) => {
       });
     }
 
+    const leidoPor = Array.isArray(reporte.leidoPor) ? [...reporte.leidoPor] : [];
+    if (!leidoPor.includes(apoderadoId)) {
+      leidoPor.push(apoderadoId);
+      await reporte.update({ leidoPor });
+    }
+
     res.status(200).json({
       success: true,
       mensaje: 'Lectura registrada exitosamente',
       data: {
         reporteId,
+        leido: true,
         fechaConfirmacion: new Date().toISOString()
       }
     });
