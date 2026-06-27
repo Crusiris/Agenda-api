@@ -3,27 +3,13 @@ const { getModels } = require('../models');
 
 // Tipos de reportes disponibles (definición estática del dominio)
 const tiposReportes = [
-  {
-    tipo: 'asistencia',
-    nombre: 'Reporte de Asistencia',
-    descripcion: 'Registro diario de asistencia de estudiantes',
-    campos: ['presente', 'ausente', 'atrasado', 'justificado'],
-    requiereValidacion: true
-  },
-  {
-    tipo: 'aviso-diario',
-    nombre: 'Aviso Diario',
-    descripcion: 'Comunicaciones generales del día escolar',
-    campos: ['titulo', 'contenido', 'prioridad', 'fechaVencimiento'],
-    requiereValidacion: false
-  },
-  {
-    tipo: 'reporte-salud',
-    nombre: 'Reporte de Salud',
-    descripcion: 'Información médica y de salud de estudiantes',
-    campos: ['sintomas', 'acciones', 'requiereAtencion', 'contactoRealizado'],
-    requiereValidacion: true
-  }
+  { tipo: 'aviso-diario',    nombre: 'Aviso Diario',          descripcion: 'Comunicaciones generales del día escolar' },
+  { tipo: 'Conducta',       nombre: 'Conducta',              descripcion: 'Registro de comportamiento del estudiante' },
+  { tipo: 'Informativo',    nombre: 'Informativo',           descripcion: 'Información general para los apoderados' },
+  { tipo: 'Tarea',          nombre: 'Tarea',                 descripcion: 'Asignación de tarea o trabajo escolar' },
+  { tipo: 'Urgente',        nombre: 'Urgente',               descripcion: 'Comunicado de carácter urgente' },
+  { tipo: 'reporte-salud',  nombre: 'Reporte de Salud',      descripcion: 'Información médica y de salud de estudiantes' },
+  { tipo: 'asistencia',     nombre: 'Reporte de Asistencia', descripcion: 'Registro diario de asistencia de estudiantes' },
 ];
 
 // Obtener tipos de reportes disponibles
@@ -102,7 +88,7 @@ const crearReporteAsistencia = async (req, res) => {
 // Crear aviso diario
 const crearAvisoDiario = async (req, res) => {
   try {
-    const { cursoId, titulo, contenido } = req.body;
+    const { cursoId, titulo, contenido, estudianteId, tipoReporte } = req.body;
     const docenteId = req.headers['x-docente-id'] || 1;
 
     if (!cursoId || !titulo || !contenido) {
@@ -115,9 +101,10 @@ const crearAvisoDiario = async (req, res) => {
     const { ReporteEscolar } = getModels();
 
     const nuevoAviso = await ReporteEscolar.create({
-      tipoReporte: 'aviso-diario',
+      tipoReporte: tipoReporte || 'aviso-diario',
       cursoId: parseInt(cursoId),
       docenteId: parseInt(docenteId),
+      estudianteId: estudianteId ? parseInt(estudianteId) : null,
       titulo,
       contenido: typeof contenido === 'string' ? { texto: contenido } : contenido,
       fecha: new Date()
@@ -280,5 +267,26 @@ module.exports = {
   crearAvisoDiario,
   crearReporteSalud,
   obtenerReportesPorCurso,
-  obtenerEstadisticas
+  obtenerEstadisticas,
+  obtenerReportePorId
 };
+
+// Obtener un reporte por ID
+async function obtenerReportePorId(req, res) {
+  try {
+    const { id } = req.params;
+    const { ReporteEscolar, Curso, Estudiante } = getModels();
+    const reporte = await ReporteEscolar.findByPk(id, {
+      include: [
+        { model: Curso, as: 'curso', attributes: ['id', 'nombre', 'nivel'] },
+        { model: Estudiante, as: 'estudiante', attributes: ['id', 'nombres', 'apellidos'], required: false }
+      ]
+    });
+    if (!reporte) {
+      return res.status(404).json({ success: false, mensaje: 'Reporte no encontrado' });
+    }
+    res.status(200).json({ success: true, mensaje: 'Reporte obtenido', data: reporte });
+  } catch (error) {
+    res.status(500).json({ success: false, mensaje: 'Error al obtener reporte', error: error.message });
+  }
+}

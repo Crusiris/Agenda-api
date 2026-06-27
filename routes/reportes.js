@@ -31,6 +31,7 @@ const reportesController = require('../controllers/reportesController');
  *                         $ref: '#/components/schemas/TipoReporte'
  */
 router.get('/tipos', reportesController.obtenerTiposReportes);
+router.get('/:id', reportesController.obtenerReportePorId);
 
 /**
  * @swagger
