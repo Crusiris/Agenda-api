@@ -3,7 +3,7 @@
  * Elimina tablas existentes y las recrea
  */
 
-const { connect, syncModels, disconnect } = require('./database/connection');
+const { connect, syncModels, disconnect } = require('./connection');
 const { initializeModels } = require('../models');
 
 const createTables = async () => {
