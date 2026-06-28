@@ -21,8 +21,20 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Middleware
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
+  origin: (origin, callback) => {
+    // Permitir peticiones sin origin (Postman, curl, mobile)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origen no permitido → ${origin}`));
+  },
+  credentials: true,
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));

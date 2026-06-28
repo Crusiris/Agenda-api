@@ -17,41 +17,59 @@ class DatabaseConnection {
   async connect() {
     try {
       console.log('🔌 Iniciando conexión a MySQL...');
-      
-      // Configuración de Sequelize
-      this.sequelize = new Sequelize(
-        process.env.DB_NAME || 'agenda_escolar',
-        process.env.DB_USER || 'root',
-        process.env.DB_PASSWORD || '',
-        {
-          host: process.env.DB_HOST || 'localhost',
-          port: process.env.DB_PORT || 3306,
+
+      const isProd = process.env.NODE_ENV === 'production';
+
+      // Aiven (y otros proveedores cloud) exigen SSL — se activa en producción
+      // o cuando DB_SSL=true está explícitamente definido.
+      const useSSL = isProd || process.env.DB_SSL === 'true';
+
+      const dialectOptions = {
+        charset: 'utf8mb4',
+        ...(useSSL && {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false, // Aiven usa cert autofirmado
+          },
+        }),
+      };
+
+      // Soporte para DB_URL (Aiven / Render) o variables individuales (local)
+      if (process.env.DB_URL) {
+        this.sequelize = new Sequelize(process.env.DB_URL, {
           dialect: 'mysql',
-          logging: process.env.NODE_ENV === 'development' ? console.log : false,
-          pool: {
-            max: 10,
-            min: 0,
-            acquire: 30000,
-            idle: 10000
+          logging: isProd ? false : console.log,
+          pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
+          define: { timestamps: true, underscored: true, charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' },
+          dialectOptions,
+        });
+      } else {
+        this.sequelize = new Sequelize(
+          process.env.DB_NAME || 'agenda_escolar',
+          process.env.DB_USER || 'root',
+          process.env.DB_PASSWORD || '',
+          {
+            host: process.env.DB_HOST || 'localhost',
+            port: Number(process.env.DB_PORT) || 3306,
+            dialect: 'mysql',
+            logging: isProd ? false : console.log,
+            pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
+            define: { timestamps: true, underscored: true, charset: 'utf8mb4', collate: 'utf8mb4_unicode_ci' },
+            dialectOptions,
           },
-          define: {
-            timestamps: true,
-            underscored: true,
-            charset: 'utf8mb4',
-            collate: 'utf8mb4_unicode_ci'
-          },
-          dialectOptions: {
-            charset: 'utf8mb4'
-          }
-        }
-      );
+        );
+      }
 
       // Autenticar conexión
       await this.sequelize.authenticate();
-      
-      console.log('✅ Conexión exitosa a MySQL');
-      console.log(`📍 Base de datos: ${process.env.DB_NAME || 'agenda_escolar'}`);
-      console.log(`🌐 Host: ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 3306}`);
+
+      if (process.env.DB_URL) {
+        console.log('✅ Conexión exitosa a MySQL (DB_URL)');
+      } else {
+        console.log('✅ Conexión exitosa a MySQL');
+        console.log(`📍 Base de datos: ${process.env.DB_NAME || 'agenda_escolar'}`);
+        console.log(`🌐 Host: ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 3306}`);
+      }
       
       return this.sequelize;
     } catch (error) {
