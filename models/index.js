@@ -69,14 +69,14 @@ const setupAssociations = () => {
   // ── Apoderado <-> Estudiante  (N:M via apoderado_estudiante) ───
   Apoderado.belongsToMany(Estudiante, {
     through: ApoderadoEstudiante,
-    foreignKey: 'apoderado_id',
-    otherKey: 'estudiante_id',
+    foreignKey: 'apoderadoId',
+    otherKey: 'estudianteId',
     as: 'estudiantes'
   });
   Estudiante.belongsToMany(Apoderado, {
     through: ApoderadoEstudiante,
-    foreignKey: 'estudiante_id',
-    otherKey: 'apoderado_id',
+    foreignKey: 'estudianteId',
+    otherKey: 'apoderadoId',
     as: 'apoderados'
   });
 

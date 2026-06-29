@@ -54,6 +54,9 @@ class BaseDatosEscolar {
 
     const reportes = await this.crearReportes(docentes, cursos, estudiantes);
     console.log(`📋 ${reportes.length} reportes de ejemplo creados`);
+
+    const ads = await this.crearAds();
+    console.log(`📢 ${ads.length} anuncios de ejemplo creados`);
   }
 
   async crearCursos() {
@@ -80,7 +83,7 @@ class BaseDatosEscolar {
         rut: '12345678-9',
         nombres: 'María',
         apellidos: 'González Pérez',
-        email: 'maria.gonzalez@colegio.cl',
+        email: 'maria@colegio.cl',
         password: '123456',
         especialidad: 'Matemáticas',
         telefono: '+56987000001',
@@ -88,9 +91,9 @@ class BaseDatosEscolar {
       },
       {
         rut: '87654321-K',
-        nombres: 'Carlos',
+        nombres: 'Juan',
         apellidos: 'Rodríguez Silva',
-        email: 'carlos.rodriguez@colegio.cl',
+        email: 'juan@colegio.cl',
         password: '123456',
         especialidad: 'Lenguaje y Comunicación',
         telefono: '+56987000002',
@@ -151,20 +154,20 @@ class BaseDatosEscolar {
     const apoderadosData = [
       {
         rut: '16789012-3',
-        nombres: 'Patricia',
+        nombres: 'Ana',
         apellidos: 'Morales Jiménez',
         parentesco: 'Madre',
-        email: 'patricia.morales@gmail.com',
+        email: 'ana@email.cl',
         password: '123456',
         telefono: '+56987654321',
-        _hijos: [estudiantes[0].id]
+        _hijos: [estudiantes[0].id, estudiantes[5].id]  // Sofía y Tomás
       },
       {
         rut: '17890123-4',
-        nombres: 'Roberto',
+        nombres: 'Carlos',
         apellidos: 'Fernández Castro',
         parentesco: 'Padre',
-        email: 'roberto.fernandez@outlook.com',
+        email: 'carlos@email.cl',
         password: '123456',
         telefono: '+56976543210',
         _hijos: [estudiantes[1].id, estudiantes[2].id]
@@ -256,6 +259,54 @@ class BaseDatosEscolar {
           accionesTomadas: 'Se contactó a enfermería y al apoderado',
           requiereSeguimiento: true
         }
+      },
+      {
+        docenteId: docentes[0].id,
+        cursoId: cursos[0].id,
+        estudianteId: estudiantes[5].id,
+        tipoReporte: 'Conducta',
+        titulo: 'Conducta — Tomás Castro',
+        fecha: fechaHoy,
+        contenido: {
+          descripcion: 'El estudiante interrumpió la clase en reiteradas ocasiones.',
+          severidad: 'leve',
+          accionesTomadas: 'Conversación con el alumno. Se notifica al apoderado.',
+          requiereEntrevista: false
+        }
+      },
+      {
+        docenteId: docentes[1].id,
+        cursoId: cursos[2].id,
+        tipoReporte: 'Informativo',
+        titulo: 'Cambio de sala — 3° Básico A',
+        fecha: fechaHoy,
+        contenido: {
+          texto: 'A partir de la próxima semana las clases de Lenguaje se realizarán en la sala 204.'
+        }
+      },
+      {
+        docenteId: docentes[0].id,
+        cursoId: cursos[0].id,
+        estudianteId: estudiantes[0].id,
+        tipoReporte: 'Tarea',
+        titulo: 'Tarea de Matemáticas — Sofía Herrera',
+        fecha: fechaHoy,
+        contenido: {
+          descripcion: 'Ejercicios de sumas y restas con llevadas, páginas 34–35 del cuaderno.',
+          fechaEntrega: new Date(fechaHoy.getTime() + 3 * 24 * 60 * 60 * 1000)
+        }
+      },
+      {
+        docenteId: docentes[3].id,
+        cursoId: cursos[4].id,
+        tipoReporte: 'Urgente',
+        titulo: 'Cierre anticipado — 5° Básico A',
+        fecha: fechaHoy,
+        contenido: {
+          motivo: 'Por corte de agua en el establecimiento se suspenden las clases de la tarde.',
+          horaSalida: '13:00',
+          instrucciones: 'Retirar a los estudiantes antes de las 13:00 hrs.'
+        }
       }
     ];
 
@@ -266,6 +317,43 @@ class BaseDatosEscolar {
     return reportes;
   }
 
+  async crearAds() {
+    const fechaHoy  = new Date();
+    const enUnMes   = new Date(fechaHoy.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const enDosM    = new Date(fechaHoy.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+    const adsData = [
+      {
+        titulo: 'Bienvenidos al Año Escolar 2026',
+        descripcion: 'Les damos la bienvenida a todos nuestros estudiantes y familias a un nuevo año escolar lleno de aprendizajes.',
+        activo: true,
+        fechaInicio: fechaHoy,
+        fechaFin: enUnMes
+      },
+      {
+        titulo: 'Matrícula 2027 — Inscripción Abierta',
+        descripcion: 'Ya está disponible el proceso de matrícula para el año 2027. Acércate a la secretaría del colegio con la documentación requerida.',
+        enlaceUrl: 'https://colegio.cl/matricula',
+        activo: true,
+        fechaInicio: fechaHoy,
+        fechaFin: enDosM
+      },
+      {
+        titulo: 'Taller de Robótica para Estudiantes',
+        descripcion: 'Inscripciones abiertas para el taller extraprogramático de robótica los días miércoles de 15:00 a 17:00 hrs.',
+        activo: true,
+        fechaInicio: fechaHoy,
+        fechaFin: enUnMes
+      }
+    ];
+
+    const ads = [];
+    for (const data of adsData) {
+      ads.push(await this.models.Ad.create(data));
+    }
+    return ads;
+  }
+
   async obtenerEstadisticas() {
     try {
       const stats = {
@@ -274,7 +362,8 @@ class BaseDatosEscolar {
         estudiantes: await this.models.Estudiante.count(),
         apoderados:  await this.models.Apoderado.count(),
         contactos:   await this.models.Contacto.count(),
-        reportes:    await this.models.ReporteEscolar.count()
+        reportes:    await this.models.ReporteEscolar.count(),
+        anuncios:    await this.models.Ad.count()
       };
 
       console.log('📊 Estadísticas de la Base de Datos:');
@@ -284,6 +373,7 @@ class BaseDatosEscolar {
       console.log(`   👨‍👩‍👧‍👦 Apoderados:  ${stats.apoderados}`);
       console.log(`   📞 Contactos:   ${stats.contactos}`);
       console.log(`   📋 Reportes:    ${stats.reportes}`);
+      console.log(`   📢 Anuncios:    ${stats.anuncios}`);
 
       return stats;
     } catch (error) {
