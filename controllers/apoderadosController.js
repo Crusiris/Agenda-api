@@ -255,9 +255,14 @@ const obtenerReportesEstudiante = async (req, res) => {
   }
 };
 
-// Registro de nuevo apoderado
+// Registro de nuevo apoderado (solo puede hacerlo un docente autenticado)
 const registrarApoderado = async (req, res) => {
   try {
+    const docenteId = req.headers['x-docente-id'];
+    if (!docenteId) {
+      return res.status(401).json({ success: false, mensaje: 'Solo un docente autenticado puede registrar usuarios' });
+    }
+
     const { nombres, apellidos, rut, email, password, parentesco } = req.body;
 
     if (!nombres || !apellidos || !rut || !email || !password) {

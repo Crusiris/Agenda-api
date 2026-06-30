@@ -45,6 +45,7 @@ const docentesController = require('../controllers/docentesController');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.post('/registro', docentesController.registrarDocente);
 router.post('/login', docentesController.autenticarDocente);
 
 /**

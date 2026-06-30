@@ -265,5 +265,42 @@ module.exports = {
   obtenerCursos,
   obtenerEstudiantesPorCurso,
   crearReporte,
-  obtenerReportes
+  obtenerReportes,
+  registrarDocente
 };
+
+// Registro de nuevo docente (solo puede hacerlo un docente autenticado)
+async function registrarDocente(req, res) {
+  try {
+    const docenteId = req.headers['x-docente-id'];
+    if (!docenteId) {
+      return res.status(401).json({ success: false, mensaje: 'Solo un docente autenticado puede registrar usuarios' });
+    }
+
+    const { nombres, apellidos, rut, email, password, especialidad, telefono } = req.body;
+
+    if (!nombres || !apellidos || !rut || !email || !password) {
+      return res.status(400).json({ success: false, mensaje: 'Nombres, apellidos, RUT, email y contraseña son requeridos' });
+    }
+
+    const { Docente } = getModels();
+
+    const existe = await Docente.findOne({ where: { [Op.or]: [{ email: email.toLowerCase() }, { rut }] } });
+    if (existe) {
+      return res.status(409).json({ success: false, mensaje: 'Ya existe un docente con ese email o RUT' });
+    }
+
+    const docente = await Docente.create({ nombres, apellidos, rut, email, password, especialidad: especialidad || null, telefono: telefono || null });
+
+    res.status(201).json({
+      success: true,
+      mensaje: 'Docente registrado exitosamente',
+      data: { id: docente.id, nombres: docente.nombres, apellidos: docente.apellidos, email: docente.email }
+    });
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ success: false, mensaje: error.errors[0].message });
+    }
+    res.status(500).json({ success: false, mensaje: 'Error al registrar docente', error: error.message });
+  }
+}
