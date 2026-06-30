@@ -62,12 +62,11 @@ const initializeDatabase = async () => {
     // Inicializar modelos
     initializeModels();
 
-    // Migración: agregar columna leido_por si no existe
+    // Migración: agregar columna leido_por si no existe (idempotente)
     try {
-      await query('ALTER TABLE reportes_escolares ADD COLUMN leido_por JSON NULL');
-      console.log('✅ Migración: columna leido_por agregada');
+      await query('ALTER TABLE reportes_escolares ADD COLUMN IF NOT EXISTS leido_por JSON NULL');
     } catch {
-      // La columna ya existe, continuar sin error
+      // Ignorar — versiones de MySQL < 8 sin soporte a IF NOT EXISTS
     }
 
     console.log('✅ Base de datos MySQL conectada y modelos inicializados');
