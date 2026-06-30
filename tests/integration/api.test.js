@@ -80,6 +80,86 @@ class APIIntegrationTests {
       );
     });
 
+    this.runner.describe('POST /api/apoderados/registro - Registro exitoso', async () => {
+      const nuevoApoderado = {
+        nombres: 'Test',
+        apellidos: 'Registro Integration',
+        rut: '11111111-1',
+        email: `test.registro.${Date.now()}@test.com`,
+        password: 'test123456',
+        parentesco: 'Madre'
+      };
+
+      const response = await HTTPTestHelper.post('/api/apoderados/registro', nuevoApoderado);
+
+      ValidationTestHelper.assertStatusCode(response, 201, 'Registro debe retornar 201');
+      ValidationTestHelper.assertTrue(response.body?.success === true, 'success debe ser true');
+      ValidationTestHelper.assertResponseBody(response, ['data']);
+      ValidationTestHelper.assertTrue(
+        response.body?.data?.token !== undefined,
+        'Response debe incluir token'
+      );
+      ValidationTestHelper.assertTrue(
+        response.body?.data?.apoderado?.email !== undefined,
+        'Response debe incluir datos del apoderado'
+      );
+    });
+
+    this.runner.describe('POST /api/apoderados/registro - Campos requeridos faltantes', async () => {
+      const response = await HTTPTestHelper.post('/api/apoderados/registro', {
+        email: 'incompleto@test.com',
+        password: 'test123456'
+        // falta nombres, apellidos, rut
+      });
+
+      ValidationTestHelper.assertStatusCode(response, 400, 'Debe retornar 400 si faltan campos');
+      ValidationTestHelper.assertTrue(response.body?.success === false, 'success debe ser false');
+    });
+
+    this.runner.describe('POST /api/apoderados/registro - RUT con formato inválido', async () => {
+      const response = await HTTPTestHelper.post('/api/apoderados/registro', {
+        nombres: 'Test',
+        apellidos: 'RUT Invalido',
+        rut: 'rut-invalido',
+        email: `test.rut.invalido.${Date.now()}@test.com`,
+        password: 'test123456'
+      });
+
+      ValidationTestHelper.assertTrue(
+        [400, 422].includes(response.statusCode),
+        'RUT inválido debe retornar 400 o 422'
+      );
+      ValidationTestHelper.assertTrue(response.body?.success === false, 'success debe ser false');
+    });
+
+    this.runner.describe('POST /api/apoderados/registro - Email duplicado', async () => {
+      // Usar el email de un apoderado del seeder
+      const response = await HTTPTestHelper.post('/api/apoderados/registro', {
+        nombres: 'Duplicado',
+        apellidos: 'Test',
+        rut: '99111222-3',
+        email: 'ana@email.cl', // email del seeder
+        password: 'test123456'
+      });
+
+      ValidationTestHelper.assertStatusCode(response, 409, 'Email duplicado debe retornar 409');
+      ValidationTestHelper.assertTrue(response.body?.success === false, 'success debe ser false');
+    });
+
+    this.runner.describe('POST /api/apoderados/login - Login con credenciales del seeder', async () => {
+      const response = await HTTPTestHelper.post('/api/apoderados/login', {
+        email: 'ana@email.cl',
+        password: '123456'
+      });
+
+      ValidationTestHelper.assertStatusCode(response, 200, 'Login con credenciales del seeder debe funcionar');
+      ValidationTestHelper.assertTrue(response.body?.success === true, 'success debe ser true');
+      ValidationTestHelper.assertTrue(
+        response.body?.data?.token !== undefined,
+        'Login debe retornar token'
+      );
+    });
+
     this.runner.describe('POST /api/docentes - Crear docente (sin auth)', async () => {
       const nuevoDocente = {
         rut: '99999999-9',

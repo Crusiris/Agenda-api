@@ -45,6 +45,7 @@ const apoderadosController = require('../controllers/apoderadosController');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.post('/registro', apoderadosController.registrarApoderado);
 router.post('/login', apoderadosController.autenticarApoderado);
 
 /**

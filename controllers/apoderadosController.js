@@ -255,8 +255,76 @@ const obtenerReportesEstudiante = async (req, res) => {
   }
 };
 
+// Registro de nuevo apoderado
+const registrarApoderado = async (req, res) => {
+  try {
+    const { nombres, apellidos, rut, email, password, parentesco } = req.body;
+
+    if (!nombres || !apellidos || !rut || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Nombres, apellidos, RUT, email y contraseña son requeridos'
+      });
+    }
+
+    const { Apoderado } = getModels();
+
+    const existe = await Apoderado.findOne({
+      where: { [Op.or]: [{ email: email.toLowerCase() }, { rut }] }
+    });
+
+    if (existe) {
+      return res.status(409).json({
+        success: false,
+        mensaje: 'Ya existe una cuenta con ese email o RUT'
+      });
+    }
+
+    const apoderado = await Apoderado.create({
+      nombres,
+      apellidos,
+      rut,
+      email,
+      password,
+      parentesco: parentesco || null
+    });
+
+    const token = `apoderado_token_${apoderado.id}_${Date.now()}`;
+
+    res.status(201).json({
+      success: true,
+      mensaje: 'Cuenta creada exitosamente',
+      data: {
+        token,
+        apoderado: {
+          id: apoderado.id,
+          nombres: apoderado.nombres,
+          apellidos: apoderado.apellidos,
+          email: apoderado.email,
+          parentesco: apoderado.parentesco,
+          configuracionesNotificaciones: apoderado.configuracionesNotificaciones,
+          estudiantes: []
+        }
+      }
+    });
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({
+        success: false,
+        mensaje: error.errors[0].message
+      });
+    }
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al crear la cuenta',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   autenticarApoderado,
+  registrarApoderado,
   obtenerMuroNoticias,
   confirmarLectura,
   obtenerHijos,
